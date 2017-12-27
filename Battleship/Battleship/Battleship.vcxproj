@@ -132,6 +132,7 @@
   <ItemGroup>
     <ClCompile Include="BattleshipForm.cpp" />
     <ClCompile Include="Grid.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="Ship.cpp" />
   </ItemGroup>
   <ItemGroup>

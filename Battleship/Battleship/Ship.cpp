@@ -1,4 +1,5 @@
 #include "Ship.h"
+#include <vector>
 
 // Default constructor which will create a destroyer with health and size of 2
 Ship::Ship()
@@ -45,13 +46,13 @@ bool Ship::isSunking()
 }
 
 // Set the ships location on the grid
-void Ship::setLocation(vector<vector<int, int>> loc)
+void Ship::setLocation(vector<pair<int, int>> loc)
 {
 	location = loc;
 }
 
 // Return the ship's location
-vector<vector<int, int>> Ship::getLocation()
+vector<pair<int, int>> Ship::getLocation()
 {
 	return location;
 }

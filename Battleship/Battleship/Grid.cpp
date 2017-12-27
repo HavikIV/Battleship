@@ -1,4 +1,6 @@
 #include "Grid.h"
+#include "Ship.h"
+#include <vector>
 
 Grid::Grid()
 {
@@ -12,7 +14,7 @@ Grid::Grid()
 }
 
 // Set the ship's location on the grid
-void Grid::setShip(Ship ship, vector<vector<int, int>> loc)
+void Grid::setShip(Ship ship, vector<pair<int, int>> loc)
 {
 	ship.setLocation(loc);
 }
