@@ -15,8 +15,9 @@ class Grid
 {
 	public:
 		Grid(); // default constructor, creates a 10x10 grid
-		void setShip(Ship ship, vector<pair<int, int>> loc); // Set a ship on the grid
-		void attackSlot(pair<int, int> slot); // Attack the slot and mark it either as a hit or miss
+		void setShip(int shipType, vector<pair<int, int>> loc); // Set a ship on the grid
+		bool attackSlot(pair<int, int> slot); // Attack the slot and mark it either as a hit or miss
+		//vector<vector<int>> grid; // vector that will act as a grid
 
 	private:
 		vector<Ship> battleships; // vector of ships on the grid

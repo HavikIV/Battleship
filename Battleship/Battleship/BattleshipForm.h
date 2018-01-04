@@ -13,6 +13,7 @@ namespace Battleship {
 	using namespace System::Windows::Forms;
 	using namespace System::Data;
 	using namespace System::Drawing;
+	using namespace System::Threading;
 
 	/// <summary>
 	/// Summary for BattleshipForm
@@ -21,6 +22,11 @@ namespace Battleship {
 	{
 		// Global Variables
 		bool inSetupMode = true; // Determines if the player is still setting up their game board; This variable becomes false once all ships on placed on board
+		bool attackMode = false; // Used to prevent the user from making any attacks before the ready button is clicked
+	private: System::Windows::Forms::TextBox^  txtOutput;
+
+			 GameMaster^ gm;
+			 delegate void logDelegate(String^ message);
 	public:
 		BattleshipForm(void)
 		{
@@ -30,6 +36,12 @@ namespace Battleship {
 			//
 
 			// Let's start up the Game Master and the AI on separate threads
+			//Thread^ gameMasterThread = gcnew Thread(gcnew ThreadStart(this, &BattleshipForm::StartGameMaster)); // Start the function on a separate thread
+			gm = gcnew GameMaster();
+			Thread^ gameMasterThread = gcnew Thread(gcnew ThreadStart(gm, &GameMaster::Start));
+			gameMasterThread->Start();
+
+			outputLog("Welcome to Battleship. Please set up your game board and press ready when you are done.");
 		}
 
 	protected:
@@ -268,7 +280,7 @@ private: System::Windows::Forms::Label^  A2;
 
 private: System::Windows::Forms::Label^  A1;
 private: System::Windows::Forms::Label^  lblGameMaster;
-private: System::Windows::Forms::Label^  lblOutput;
+
 private: System::Windows::Forms::GroupBox^  gbSetup;
 private: System::Windows::Forms::ListBox^  Battleships;
 private: System::Windows::Forms::GroupBox^  gbOrientation;
@@ -276,6 +288,8 @@ private: System::Windows::Forms::RadioButton^  rbVertical;
 private: System::Windows::Forms::RadioButton^  rbHorizontal;
 private: System::Windows::Forms::Button^  btnReady;
 private: System::Windows::Forms::Button^  btnReset;
+
+
 
 
 	private:
@@ -414,7 +428,6 @@ private: System::Windows::Forms::Button^  btnReset;
 			this->label2 = (gcnew System::Windows::Forms::Label());
 			this->label1 = (gcnew System::Windows::Forms::Label());
 			this->lblGameMaster = (gcnew System::Windows::Forms::Label());
-			this->lblOutput = (gcnew System::Windows::Forms::Label());
 			this->gbSetup = (gcnew System::Windows::Forms::GroupBox());
 			this->Battleships = (gcnew System::Windows::Forms::ListBox());
 			this->gbOrientation = (gcnew System::Windows::Forms::GroupBox());
@@ -422,6 +435,7 @@ private: System::Windows::Forms::Button^  btnReset;
 			this->rbHorizontal = (gcnew System::Windows::Forms::RadioButton());
 			this->btnReady = (gcnew System::Windows::Forms::Button());
 			this->btnReset = (gcnew System::Windows::Forms::Button());
+			this->txtOutput = (gcnew System::Windows::Forms::TextBox());
 			this->panel1->SuspendLayout();
 			this->panel3->SuspendLayout();
 			this->gbSetup->SuspendLayout();
@@ -2172,14 +2186,6 @@ private: System::Windows::Forms::Button^  btnReset;
 			this->lblGameMaster->TabIndex = 1;
 			this->lblGameMaster->Text = L"Game Master:";
 			// 
-			// lblOutput
-			// 
-			this->lblOutput->BorderStyle = System::Windows::Forms::BorderStyle::FixedSingle;
-			this->lblOutput->Location = System::Drawing::Point(492, 39);
-			this->lblOutput->Name = L"lblOutput";
-			this->lblOutput->Size = System::Drawing::Size(252, 133);
-			this->lblOutput->TabIndex = 2;
-			// 
 			// gbSetup
 			// 
 			this->gbSetup->Controls->Add(this->Battleships);
@@ -2241,15 +2247,18 @@ private: System::Windows::Forms::Button^  btnReset;
 			// 
 			// btnReady
 			// 
+			this->btnReady->Enabled = false;
 			this->btnReady->Location = System::Drawing::Point(498, 374);
 			this->btnReady->Name = L"btnReady";
 			this->btnReady->Size = System::Drawing::Size(75, 23);
 			this->btnReady->TabIndex = 4;
 			this->btnReady->Text = L"Ready";
 			this->btnReady->UseVisualStyleBackColor = true;
+			this->btnReady->Click += gcnew System::EventHandler(this, &BattleshipForm::readyClick);
 			// 
 			// btnReset
 			// 
+			this->btnReset->Enabled = false;
 			this->btnReset->Location = System::Drawing::Point(655, 374);
 			this->btnReset->Name = L"btnReset";
 			this->btnReset->Size = System::Drawing::Size(75, 23);
@@ -2258,19 +2267,29 @@ private: System::Windows::Forms::Button^  btnReset;
 			this->btnReset->UseVisualStyleBackColor = true;
 			this->btnReset->Click += gcnew System::EventHandler(this, &BattleshipForm::resetClick);
 			// 
+			// txtOutput
+			// 
+			this->txtOutput->Location = System::Drawing::Point(498, 38);
+			this->txtOutput->Multiline = true;
+			this->txtOutput->Name = L"txtOutput";
+			this->txtOutput->ReadOnly = true;
+			this->txtOutput->ScrollBars = System::Windows::Forms::ScrollBars::Vertical;
+			this->txtOutput->Size = System::Drawing::Size(252, 133);
+			this->txtOutput->TabIndex = 6;
+			// 
 			// BattleshipForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(777, 477);
+			this->Controls->Add(this->txtOutput);
 			this->Controls->Add(this->btnReset);
 			this->Controls->Add(this->btnReady);
 			this->Controls->Add(this->gbSetup);
-			this->Controls->Add(this->lblOutput);
 			this->Controls->Add(this->lblGameMaster);
 			this->Controls->Add(this->panel1);
 			this->Name = L"BattleshipForm";
-			this->Text = L"BattleshipForm";
+			this->Text = L"Battleship";
 			this->panel1->ResumeLayout(false);
 			this->panel1->PerformLayout();
 			this->panel3->ResumeLayout(false);
@@ -2309,6 +2328,11 @@ private: System::Void slotMousEnter(System::Object^ sender, System::EventArgs^ e
 			slots[i]->BackColor = System::Drawing::Color::LightPink;
 		}
 	}
+	else if (attackMode)
+	{
+		// The player is thinking about attacking the selected slot
+		label->BackColor = System::Drawing::Color::LightPink;
+	}
 }
 private: System::Void slotMouseLeave(System::Object^ sender, System::EventArgs^ e)
 {
@@ -2335,6 +2359,10 @@ private: System::Void slotMouseLeave(System::Object^ sender, System::EventArgs^ 
 		{
 			slots[i]->BackColor = SystemColors::Control; // Change back to the original color
 		}
+	}
+	else if (attackMode)
+	{
+		label->BackColor = SystemColors::Control;
 	}
 }
 
@@ -2529,7 +2557,10 @@ private: bool anyOverlaps(cli::array<Control^, 1>^ slots)
 	for (int i = 0; i < slots->Length; i++)
 	{
 		if (slots[i]->Text != "")
+		{
+			outputLog("You cannot place the ship there as it will overlap.");
 			return true; // The slot's text property isn't empty, an overlap will occur if the ship is place on this slot
+		}
 	}
 
 	return false; // No overlaps, so it's safe to place the ship on the selected slots
@@ -2568,14 +2599,39 @@ private: System::Void slotClick(System::Object^ sender, System::EventArgs^ e)
 			// Since the ship has already been placed on the board, remove it from the ListBox
 			Battleships->Items->Remove(selectedShip);
 
+			// Enable the reset button
+			btnReset->Enabled = true;
+
 			// Once all of the ships have been placed on the board, it's time to end the setup mode
 			if (Battleships->Items->Count == 0)
+			{
 				inSetupMode = false;
+				btnReady->Enabled = true; // Enable the ready button since all 5 ships have been place on the board
+			}
 			else
 				Battleships->SelectedIndex = 0; // Select the first item in the list box
 		}
 	}
+	else if (attackMode)
+	{
+		Monitor::Enter(gm);
+		gm->setAttack(label->Name);
+		Monitor::Exit(gm);
+
+		Thread::Sleep(100);
+
+		Monitor::Enter(gm);
+		bool x = gm->getAttackResult();
+		if (x) label->Text = "X"; else label->Text = "O";
+		slotMouseLeave(sender, e);
+		Monitor::Exit(gm);
+
+		Thread::Sleep(100);
+	}
 }
+
+//	Resets the Text property of all of the labels that are being used as slots in the game board
+//	to be empty. It also resets the ships in the ListBox and makes sure that the game is in setup mode.
 private: System::Void resetClick(System::Object^ sender, System::EventArgs^ e)
 {
 	Control::ControlCollection^ slots = panel3->Controls;
@@ -2585,13 +2641,89 @@ private: System::Void resetClick(System::Object^ sender, System::EventArgs^ e)
 		slot->Text = "";
 	}
 
-	// Reset the ships in the ListBox
+	// Reset the ships in the ListBox by first removing everything that's in it
+	Battleships->Items->Clear(); // Makes sure that the ListBox is empty before adding ships back in, otherwise they would just be appended to the list
 	Battleships->Items->AddRange(gcnew cli::array< System::Object^  >(5) {
 		L"Carrier", L"Battleship", L"Cruiser", L"Submarine",
 			L"Destroyer"
 	});
 	Battleships->SelectedIndex = 0; // Selected the Carrier
 	inSetupMode = true; // Turn on setup mode
+
+	// Disable both the Reset and Ready buttons
+	btnReady->Enabled = false;
+	btnReset->Enabled = false;
+}
+
+//	The following function will run in a separate thread and will act as the game master that
+//	handles all communication being the player and AI during their attack phases.
+private: System::Void StartGameMaster()
+{
+	txtOutput->Text += "Game Master has started on a separate thread. \r\n";
+}
+
+private: System::Void readyClick(System::Object^ sender, System::EventArgs^ e)
+{
+	vector<vector<pair<int, int>>> ships (5, vector<pair<int, int>>(0));
+	Control::ControlCollection^ slots = panel3->Controls;
+	for each (Label^ slot in slots)
+	{
+		int i;
+		int row;
+		int col;
+
+		char intial = '\0';
+		if (slot->Text != "")
+		{
+			intial = slot->Text[0];
+			slot->Text = ""; // Clear the Text out so that player can start attacking the AI's Grid
+		}
+
+		if (intial == 'C')
+			i = 0;
+		else if (intial == 'B')
+			i = 1;
+		else if (intial == 'R')
+			i = 2;
+		else if (intial == 'S')
+			i = 3;
+		else if (intial == 'D')
+			i = 4;
+		else
+			i = -1;
+
+		row = slot->Name[0] - 'A';
+		if (slot->Name->Length == 3)
+			col = 9;
+		else
+			col = slot->Name[1] - '1';
+
+		if (i != -1)
+		{
+			ships[i].push_back(make_pair(row, col));
+		}
+	}
+
+	for (int i = 0; i < ships.size(); i++)
+	{
+		gm->updateShip(true, i + 1, ships[i]);
+	}
+
+	btnReady->Enabled = false;
+	btnReset->Enabled = false;
+	gbSetup->Enabled = false;
+	attackMode = true;
+}
+
+private: void outputLog(String^ message)
+{
+	if (txtOutput->InvokeRequired)
+	{
+		logDelegate^ d = gcnew logDelegate(this, &BattleshipForm::outputLog);
+		Invoke(d, gcnew cli::array<Object^> {message});
+	}
+	else
+		txtOutput->AppendText(message + "\r\n");
 }
 };
 }

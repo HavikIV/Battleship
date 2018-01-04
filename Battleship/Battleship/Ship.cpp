@@ -56,3 +56,18 @@ vector<pair<int, int>> Ship::getLocation()
 {
 	return location;
 }
+
+bool Ship::isOnSlot(pair<int, int> p)
+{
+	// Iterate through the vector to see if any of the pairs match to the given pair
+	for each (pair<int, int> x in location)
+	{
+		if (x == p)
+		{
+			dealDmg();
+			return true;
+		}
+	}
+
+	return false;
+}

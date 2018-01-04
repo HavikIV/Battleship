@@ -14,15 +14,22 @@ Grid::Grid()
 }
 
 // Set the ship's location on the grid
-void Grid::setShip(Ship ship, vector<pair<int, int>> loc)
+void Grid::setShip(int shipType, vector<pair<int, int>> loc)
 {
-	ship.setLocation(loc);
+	battleships[shipType - 1].setLocation(loc);
 }
 
 // Perform an attack on the selected slot
-void Grid::attackSlot(pair<int, int> slot)
+bool Grid::attackSlot(pair<int, int> slot)
 {
 	// Check if any of the battleships are occupying the selected slot
+	for each (Ship s in battleships)
+	{
+		if (s.isOnSlot(slot))
+		{
+			return true;
+		}
+	}
 
-	// Display a hit if a ship is found, else display a miss
+	return false;
 }
