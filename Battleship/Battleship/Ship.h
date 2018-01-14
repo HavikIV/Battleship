@@ -19,6 +19,7 @@ class Ship
 		void setLocation(vector<pair<int, int>> loc); // Set the slots the ship is occupying on the grid;
 		vector<pair<int, int>> getLocation(); // Returns a vector containing the slot locations that the ship is occupying
 		bool isOnSlot(pair<int, int> p); // Check to see if the ship is occupying the given slot on the grid
+		int getShipSize(); // Returns the size of the ship
 
 	private:
 		int health;	// variable to store the ship's health

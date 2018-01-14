@@ -39,7 +39,16 @@ public ref class GameMaster
 					pair<int, int> attackPair = make_pair(row, col);
 
 					// Attack the point in the grid
-					succesfullAttack = playerGrid->attackSlot(attackPair); // Testing by attacking the player own grid
+					if (isAIsTurn && !playersAttack)
+					{
+						succesfullAttack = playerGrid->attackSlot(attackPair);
+					}
+					else
+					{
+						succesfullAttack = aiGrid->attackSlot(attackPair);
+					}
+
+					toggleTurn(); // Toggle the turn
 
 					slotToAttack = "";
 					Monitor::Exit(this); // Ensure that the lock is released as we are done
@@ -61,13 +70,19 @@ public ref class GameMaster
 
 		void setAttack(String^ sta) { slotToAttack = sta; }
 		bool getAttackResult() { return succesfullAttack; }
-		String^ slotToAttack = "";
+		void toggleTurn() { isAIsTurn = !isAIsTurn;  } // Toggle the turn
+		bool AIsTurn() { return isAIsTurn; }
+		bool attackInProgress() { return (slotToAttack != "") ? true : false; } // Check to see if there's already an attack being executed
+		void playerIsAttacking() { playersAttack = !playersAttack; } // Give's the player the ability to inform the GameMaster that its attacking now
+		//String^ slotToAttack = "";
 
 	private:
 		Label^ output;
-		//String^ slotToAttack = "";
+		String^ slotToAttack = "";
 		Grid* playerGrid;
 		Grid* aiGrid;
 		bool succesfullAttack;
+		bool isAIsTurn = false;
+		bool playersAttack = false;
 };
 #endif // !GAMEMASTER_H

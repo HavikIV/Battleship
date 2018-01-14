@@ -71,3 +71,8 @@ bool Ship::isOnSlot(pair<int, int> p)
 
 	return false;
 }
+
+int Ship::getShipSize()
+{
+	return size;
+}

@@ -4,6 +4,7 @@
 #include "Grid.h"
 #include "Ship.h"
 #include "GameMaster.h"
+#include "BattleshipAI.h"
 
 namespace Battleship {
 
@@ -38,8 +39,13 @@ namespace Battleship {
 			// Let's start up the Game Master and the AI on separate threads
 			//Thread^ gameMasterThread = gcnew Thread(gcnew ThreadStart(this, &BattleshipForm::StartGameMaster)); // Start the function on a separate thread
 			gm = gcnew GameMaster();
+			BattleshipAI^ AI = gcnew BattleshipAI(gm);
+
 			Thread^ gameMasterThread = gcnew Thread(gcnew ThreadStart(gm, &GameMaster::Start));
 			gameMasterThread->Start();
+
+			Thread^ AIThread = gcnew Thread(gcnew ThreadStart(AI, &BattleshipAI::Start));
+			AIThread->Start();
 
 			outputLog("Welcome to Battleship. Please set up your game board and press ready when you are done.");
 		}
@@ -2360,7 +2366,7 @@ private: System::Void slotMouseLeave(System::Object^ sender, System::EventArgs^ 
 			slots[i]->BackColor = SystemColors::Control; // Change back to the original color
 		}
 	}
-	else if (attackMode)
+	else if (attackMode & !gm->AIsTurn())
 	{
 		label->BackColor = SystemColors::Control;
 	}
@@ -2612,9 +2618,10 @@ private: System::Void slotClick(System::Object^ sender, System::EventArgs^ e)
 				Battleships->SelectedIndex = 0; // Select the first item in the list box
 		}
 	}
-	else if (attackMode)
+	else if (attackMode && !gm->AIsTurn())
 	{
 		Monitor::Enter(gm);
+		gm->playerIsAttacking(); // Start of the player's attack
 		gm->setAttack(label->Name);
 		Monitor::Exit(gm);
 
@@ -2624,9 +2631,11 @@ private: System::Void slotClick(System::Object^ sender, System::EventArgs^ e)
 		bool x = gm->getAttackResult();
 		if (x) label->Text = "X"; else label->Text = "O";
 		slotMouseLeave(sender, e);
+		gm->playerIsAttacking(); // End of the player's attack
 		Monitor::Exit(gm);
 
 		Thread::Sleep(100);
+
 	}
 }
 

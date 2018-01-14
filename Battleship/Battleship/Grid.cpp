@@ -33,3 +33,16 @@ bool Grid::attackSlot(pair<int, int> slot)
 
 	return false;
 }
+
+// Confirm whether or not given slot on grid is occupied by a ship already by iterating through the vector of ships.
+bool Grid::slotOccupied(pair<int, int> slot)
+{
+	for each (Ship ship in battleships)
+	{
+		if (ship.isOnSlot(slot))
+		{
+			return true;
+		}
+	}
+	return false;
+}

@@ -130,12 +130,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BattleshipAI.cpp" />
     <ClCompile Include="BattleshipForm.cpp" />
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Ship.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BattleshipAI.h" />
     <ClInclude Include="BattleshipForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
