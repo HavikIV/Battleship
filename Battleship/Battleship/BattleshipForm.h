@@ -25,6 +25,41 @@ namespace Battleship {
 		bool inSetupMode = true; // Determines if the player is still setting up their game board; This variable becomes false once all ships on placed on board
 		bool attackMode = false; // Used to prevent the user from making any attacks before the ready button is clicked
 	private: System::Windows::Forms::TextBox^  txtOutput;
+	private: System::Windows::Forms::Panel^  pnlSetup;
+	private: System::Windows::Forms::Panel^  pnlHealth;
+
+	private: System::Windows::Forms::GroupBox^  gbAI;
+	private: System::Windows::Forms::GroupBox^  gbPlayer;
+	private: System::Windows::Forms::Label^  lblPDestroyer;
+
+	private: System::Windows::Forms::Label^  lblPSubmarine;
+
+	private: System::Windows::Forms::Label^  lblPCruiser;
+
+	private: System::Windows::Forms::Label^  lblPBattleship;
+	private: System::Windows::Forms::Label^  lblPCarrier;
+	private: System::Windows::Forms::Label^  lblADestroyer;
+
+	private: System::Windows::Forms::Label^  lblASubmarine;
+
+	private: System::Windows::Forms::Label^  lblACruiser;
+
+	private: System::Windows::Forms::Label^  lblABattleship;
+
+	private: System::Windows::Forms::Label^  lblACarrier;
+	private: System::Windows::Forms::Label^  lblADestroyerHP;
+	private: System::Windows::Forms::Label^  lblASubmarineHP;
+	private: System::Windows::Forms::Label^  lblACriuserHP;
+	private: System::Windows::Forms::Label^  lblABattleshipHP;
+	private: System::Windows::Forms::Label^  lblACarrierHP;
+	private: System::Windows::Forms::Label^  lblPDestroyerHP;
+
+	private: System::Windows::Forms::Label^  lblPSubmarineHP;
+	private: System::Windows::Forms::Label^  lblPCriuserHP;
+	private: System::Windows::Forms::Label^  lblPBattleshipHP;
+	private: System::Windows::Forms::Label^  lblPCarrierHP;
+
+
 
 			 GameMaster^ gm;
 			 delegate void logDelegate(String^ message);
@@ -442,10 +477,38 @@ private: System::Windows::Forms::Button^  btnReset;
 			this->btnReady = (gcnew System::Windows::Forms::Button());
 			this->btnReset = (gcnew System::Windows::Forms::Button());
 			this->txtOutput = (gcnew System::Windows::Forms::TextBox());
+			this->pnlSetup = (gcnew System::Windows::Forms::Panel());
+			this->pnlHealth = (gcnew System::Windows::Forms::Panel());
+			this->gbAI = (gcnew System::Windows::Forms::GroupBox());
+			this->lblADestroyerHP = (gcnew System::Windows::Forms::Label());
+			this->lblASubmarineHP = (gcnew System::Windows::Forms::Label());
+			this->lblACriuserHP = (gcnew System::Windows::Forms::Label());
+			this->lblABattleshipHP = (gcnew System::Windows::Forms::Label());
+			this->lblACarrierHP = (gcnew System::Windows::Forms::Label());
+			this->lblADestroyer = (gcnew System::Windows::Forms::Label());
+			this->lblASubmarine = (gcnew System::Windows::Forms::Label());
+			this->lblACruiser = (gcnew System::Windows::Forms::Label());
+			this->lblABattleship = (gcnew System::Windows::Forms::Label());
+			this->lblACarrier = (gcnew System::Windows::Forms::Label());
+			this->gbPlayer = (gcnew System::Windows::Forms::GroupBox());
+			this->lblPDestroyerHP = (gcnew System::Windows::Forms::Label());
+			this->lblPSubmarineHP = (gcnew System::Windows::Forms::Label());
+			this->lblPCriuserHP = (gcnew System::Windows::Forms::Label());
+			this->lblPBattleshipHP = (gcnew System::Windows::Forms::Label());
+			this->lblPCarrierHP = (gcnew System::Windows::Forms::Label());
+			this->lblPDestroyer = (gcnew System::Windows::Forms::Label());
+			this->lblPSubmarine = (gcnew System::Windows::Forms::Label());
+			this->lblPCruiser = (gcnew System::Windows::Forms::Label());
+			this->lblPBattleship = (gcnew System::Windows::Forms::Label());
+			this->lblPCarrier = (gcnew System::Windows::Forms::Label());
 			this->panel1->SuspendLayout();
 			this->panel3->SuspendLayout();
 			this->gbSetup->SuspendLayout();
 			this->gbOrientation->SuspendLayout();
+			this->pnlSetup->SuspendLayout();
+			this->pnlHealth->SuspendLayout();
+			this->gbAI->SuspendLayout();
+			this->gbPlayer->SuspendLayout();
 			this->SuspendLayout();
 			// 
 			// panel1
@@ -2196,7 +2259,7 @@ private: System::Windows::Forms::Button^  btnReset;
 			// 
 			this->gbSetup->Controls->Add(this->Battleships);
 			this->gbSetup->Controls->Add(this->gbOrientation);
-			this->gbSetup->Location = System::Drawing::Point(492, 182);
+			this->gbSetup->Location = System::Drawing::Point(492, 181);
 			this->gbSetup->Name = L"gbSetup";
 			this->gbSetup->Size = System::Drawing::Size(252, 140);
 			this->gbSetup->TabIndex = 3;
@@ -2254,7 +2317,7 @@ private: System::Windows::Forms::Button^  btnReset;
 			// btnReady
 			// 
 			this->btnReady->Enabled = false;
-			this->btnReady->Location = System::Drawing::Point(498, 374);
+			this->btnReady->Location = System::Drawing::Point(9, 195);
 			this->btnReady->Name = L"btnReady";
 			this->btnReady->Size = System::Drawing::Size(75, 23);
 			this->btnReady->TabIndex = 4;
@@ -2265,7 +2328,7 @@ private: System::Windows::Forms::Button^  btnReset;
 			// btnReset
 			// 
 			this->btnReset->Enabled = false;
-			this->btnReset->Location = System::Drawing::Point(655, 374);
+			this->btnReset->Location = System::Drawing::Point(166, 195);
 			this->btnReset->Name = L"btnReset";
 			this->btnReset->Size = System::Drawing::Size(75, 23);
 			this->btnReset->TabIndex = 5;
@@ -2275,7 +2338,7 @@ private: System::Windows::Forms::Button^  btnReset;
 			// 
 			// txtOutput
 			// 
-			this->txtOutput->Location = System::Drawing::Point(498, 38);
+			this->txtOutput->Location = System::Drawing::Point(492, 37);
 			this->txtOutput->Multiline = true;
 			this->txtOutput->Name = L"txtOutput";
 			this->txtOutput->ReadOnly = true;
@@ -2283,15 +2346,242 @@ private: System::Windows::Forms::Button^  btnReset;
 			this->txtOutput->Size = System::Drawing::Size(252, 133);
 			this->txtOutput->TabIndex = 6;
 			// 
+			// pnlSetup
+			// 
+			this->pnlSetup->Controls->Add(this->btnReady);
+			this->pnlSetup->Controls->Add(this->btnReset);
+			this->pnlSetup->Location = System::Drawing::Point(486, 174);
+			this->pnlSetup->Name = L"pnlSetup";
+			this->pnlSetup->Size = System::Drawing::Size(266, 228);
+			this->pnlSetup->TabIndex = 7;
+			// 
+			// pnlHealth
+			// 
+			this->pnlHealth->Controls->Add(this->gbAI);
+			this->pnlHealth->Controls->Add(this->gbPlayer);
+			this->pnlHealth->Location = System::Drawing::Point(486, 174);
+			this->pnlHealth->Name = L"pnlHealth";
+			this->pnlHealth->Size = System::Drawing::Size(266, 166);
+			this->pnlHealth->TabIndex = 8;
+			this->pnlHealth->Visible = false;
+			// 
+			// gbAI
+			// 
+			this->gbAI->Controls->Add(this->lblADestroyerHP);
+			this->gbAI->Controls->Add(this->lblASubmarineHP);
+			this->gbAI->Controls->Add(this->lblACriuserHP);
+			this->gbAI->Controls->Add(this->lblABattleshipHP);
+			this->gbAI->Controls->Add(this->lblACarrierHP);
+			this->gbAI->Controls->Add(this->lblADestroyer);
+			this->gbAI->Controls->Add(this->lblASubmarine);
+			this->gbAI->Controls->Add(this->lblACruiser);
+			this->gbAI->Controls->Add(this->lblABattleship);
+			this->gbAI->Controls->Add(this->lblACarrier);
+			this->gbAI->Location = System::Drawing::Point(140, 11);
+			this->gbAI->Name = L"gbAI";
+			this->gbAI->Size = System::Drawing::Size(123, 147);
+			this->gbAI->TabIndex = 1;
+			this->gbAI->TabStop = false;
+			this->gbAI->Text = L"AI";
+			// 
+			// lblADestroyerHP
+			// 
+			this->lblADestroyerHP->AutoSize = true;
+			this->lblADestroyerHP->Location = System::Drawing::Point(65, 116);
+			this->lblADestroyerHP->Name = L"lblADestroyerHP";
+			this->lblADestroyerHP->Size = System::Drawing::Size(0, 13);
+			this->lblADestroyerHP->TabIndex = 14;
+			// 
+			// lblASubmarineHP
+			// 
+			this->lblASubmarineHP->AutoSize = true;
+			this->lblASubmarineHP->Location = System::Drawing::Point(65, 92);
+			this->lblASubmarineHP->Name = L"lblASubmarineHP";
+			this->lblASubmarineHP->Size = System::Drawing::Size(0, 13);
+			this->lblASubmarineHP->TabIndex = 13;
+			// 
+			// lblACriuserHP
+			// 
+			this->lblACriuserHP->AutoSize = true;
+			this->lblACriuserHP->Location = System::Drawing::Point(65, 69);
+			this->lblACriuserHP->Name = L"lblACriuserHP";
+			this->lblACriuserHP->Size = System::Drawing::Size(0, 13);
+			this->lblACriuserHP->TabIndex = 12;
+			// 
+			// lblABattleshipHP
+			// 
+			this->lblABattleshipHP->AutoSize = true;
+			this->lblABattleshipHP->Location = System::Drawing::Point(65, 44);
+			this->lblABattleshipHP->Name = L"lblABattleshipHP";
+			this->lblABattleshipHP->Size = System::Drawing::Size(0, 13);
+			this->lblABattleshipHP->TabIndex = 11;
+			// 
+			// lblACarrierHP
+			// 
+			this->lblACarrierHP->AutoSize = true;
+			this->lblACarrierHP->Location = System::Drawing::Point(65, 20);
+			this->lblACarrierHP->Name = L"lblACarrierHP";
+			this->lblACarrierHP->Size = System::Drawing::Size(0, 13);
+			this->lblACarrierHP->TabIndex = 10;
+			// 
+			// lblADestroyer
+			// 
+			this->lblADestroyer->AutoSize = true;
+			this->lblADestroyer->Location = System::Drawing::Point(6, 116);
+			this->lblADestroyer->Name = L"lblADestroyer";
+			this->lblADestroyer->Size = System::Drawing::Size(55, 13);
+			this->lblADestroyer->TabIndex = 9;
+			this->lblADestroyer->Text = L"Destroyer:";
+			// 
+			// lblASubmarine
+			// 
+			this->lblASubmarine->AutoSize = true;
+			this->lblASubmarine->Location = System::Drawing::Point(6, 92);
+			this->lblASubmarine->Name = L"lblASubmarine";
+			this->lblASubmarine->Size = System::Drawing::Size(60, 13);
+			this->lblASubmarine->TabIndex = 8;
+			this->lblASubmarine->Text = L"Submarine:";
+			// 
+			// lblACruiser
+			// 
+			this->lblACruiser->AutoSize = true;
+			this->lblACruiser->Location = System::Drawing::Point(6, 68);
+			this->lblACruiser->Name = L"lblACruiser";
+			this->lblACruiser->Size = System::Drawing::Size(42, 13);
+			this->lblACruiser->TabIndex = 7;
+			this->lblACruiser->Text = L"Cruiser:";
+			// 
+			// lblABattleship
+			// 
+			this->lblABattleship->AutoSize = true;
+			this->lblABattleship->Location = System::Drawing::Point(6, 44);
+			this->lblABattleship->Name = L"lblABattleship";
+			this->lblABattleship->Size = System::Drawing::Size(56, 13);
+			this->lblABattleship->TabIndex = 6;
+			this->lblABattleship->Text = L"Battleship:";
+			// 
+			// lblACarrier
+			// 
+			this->lblACarrier->AutoSize = true;
+			this->lblACarrier->Location = System::Drawing::Point(6, 20);
+			this->lblACarrier->Name = L"lblACarrier";
+			this->lblACarrier->Size = System::Drawing::Size(40, 13);
+			this->lblACarrier->TabIndex = 5;
+			this->lblACarrier->Text = L"Carrier:";
+			// 
+			// gbPlayer
+			// 
+			this->gbPlayer->Controls->Add(this->lblPDestroyerHP);
+			this->gbPlayer->Controls->Add(this->lblPSubmarineHP);
+			this->gbPlayer->Controls->Add(this->lblPCriuserHP);
+			this->gbPlayer->Controls->Add(this->lblPBattleshipHP);
+			this->gbPlayer->Controls->Add(this->lblPCarrierHP);
+			this->gbPlayer->Controls->Add(this->lblPDestroyer);
+			this->gbPlayer->Controls->Add(this->lblPSubmarine);
+			this->gbPlayer->Controls->Add(this->lblPCruiser);
+			this->gbPlayer->Controls->Add(this->lblPBattleship);
+			this->gbPlayer->Controls->Add(this->lblPCarrier);
+			this->gbPlayer->Location = System::Drawing::Point(3, 11);
+			this->gbPlayer->Name = L"gbPlayer";
+			this->gbPlayer->Size = System::Drawing::Size(123, 147);
+			this->gbPlayer->TabIndex = 0;
+			this->gbPlayer->TabStop = false;
+			this->gbPlayer->Text = L"Player";
+			// 
+			// lblPDestroyerHP
+			// 
+			this->lblPDestroyerHP->AutoSize = true;
+			this->lblPDestroyerHP->Location = System::Drawing::Point(76, 116);
+			this->lblPDestroyerHP->Name = L"lblPDestroyerHP";
+			this->lblPDestroyerHP->Size = System::Drawing::Size(0, 13);
+			this->lblPDestroyerHP->TabIndex = 9;
+			// 
+			// lblPSubmarineHP
+			// 
+			this->lblPSubmarineHP->AutoSize = true;
+			this->lblPSubmarineHP->Location = System::Drawing::Point(76, 92);
+			this->lblPSubmarineHP->Name = L"lblPSubmarineHP";
+			this->lblPSubmarineHP->Size = System::Drawing::Size(0, 13);
+			this->lblPSubmarineHP->TabIndex = 8;
+			// 
+			// lblPCriuserHP
+			// 
+			this->lblPCriuserHP->AutoSize = true;
+			this->lblPCriuserHP->Location = System::Drawing::Point(76, 69);
+			this->lblPCriuserHP->Name = L"lblPCriuserHP";
+			this->lblPCriuserHP->Size = System::Drawing::Size(0, 13);
+			this->lblPCriuserHP->TabIndex = 7;
+			// 
+			// lblPBattleshipHP
+			// 
+			this->lblPBattleshipHP->AutoSize = true;
+			this->lblPBattleshipHP->Location = System::Drawing::Point(76, 44);
+			this->lblPBattleshipHP->Name = L"lblPBattleshipHP";
+			this->lblPBattleshipHP->Size = System::Drawing::Size(0, 13);
+			this->lblPBattleshipHP->TabIndex = 6;
+			// 
+			// lblPCarrierHP
+			// 
+			this->lblPCarrierHP->AutoSize = true;
+			this->lblPCarrierHP->Location = System::Drawing::Point(76, 20);
+			this->lblPCarrierHP->Name = L"lblPCarrierHP";
+			this->lblPCarrierHP->Size = System::Drawing::Size(0, 13);
+			this->lblPCarrierHP->TabIndex = 5;
+			// 
+			// lblPDestroyer
+			// 
+			this->lblPDestroyer->AutoSize = true;
+			this->lblPDestroyer->Location = System::Drawing::Point(6, 116);
+			this->lblPDestroyer->Name = L"lblPDestroyer";
+			this->lblPDestroyer->Size = System::Drawing::Size(55, 13);
+			this->lblPDestroyer->TabIndex = 4;
+			this->lblPDestroyer->Text = L"Destroyer:";
+			// 
+			// lblPSubmarine
+			// 
+			this->lblPSubmarine->AutoSize = true;
+			this->lblPSubmarine->Location = System::Drawing::Point(6, 92);
+			this->lblPSubmarine->Name = L"lblPSubmarine";
+			this->lblPSubmarine->Size = System::Drawing::Size(60, 13);
+			this->lblPSubmarine->TabIndex = 3;
+			this->lblPSubmarine->Text = L"Submarine:";
+			// 
+			// lblPCruiser
+			// 
+			this->lblPCruiser->AutoSize = true;
+			this->lblPCruiser->Location = System::Drawing::Point(6, 68);
+			this->lblPCruiser->Name = L"lblPCruiser";
+			this->lblPCruiser->Size = System::Drawing::Size(42, 13);
+			this->lblPCruiser->TabIndex = 2;
+			this->lblPCruiser->Text = L"Cruiser:";
+			// 
+			// lblPBattleship
+			// 
+			this->lblPBattleship->AutoSize = true;
+			this->lblPBattleship->Location = System::Drawing::Point(6, 44);
+			this->lblPBattleship->Name = L"lblPBattleship";
+			this->lblPBattleship->Size = System::Drawing::Size(56, 13);
+			this->lblPBattleship->TabIndex = 1;
+			this->lblPBattleship->Text = L"Battleship:";
+			// 
+			// lblPCarrier
+			// 
+			this->lblPCarrier->AutoSize = true;
+			this->lblPCarrier->Location = System::Drawing::Point(6, 20);
+			this->lblPCarrier->Name = L"lblPCarrier";
+			this->lblPCarrier->Size = System::Drawing::Size(40, 13);
+			this->lblPCarrier->TabIndex = 0;
+			this->lblPCarrier->Text = L"Carrier:";
+			// 
 			// BattleshipForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(777, 477);
-			this->Controls->Add(this->txtOutput);
-			this->Controls->Add(this->btnReset);
-			this->Controls->Add(this->btnReady);
+			this->Controls->Add(this->pnlHealth);
 			this->Controls->Add(this->gbSetup);
+			this->Controls->Add(this->pnlSetup);
+			this->Controls->Add(this->txtOutput);
 			this->Controls->Add(this->lblGameMaster);
 			this->Controls->Add(this->panel1);
 			this->Name = L"BattleshipForm";
@@ -2302,6 +2592,12 @@ private: System::Windows::Forms::Button^  btnReset;
 			this->gbSetup->ResumeLayout(false);
 			this->gbOrientation->ResumeLayout(false);
 			this->gbOrientation->PerformLayout();
+			this->pnlSetup->ResumeLayout(false);
+			this->pnlHealth->ResumeLayout(false);
+			this->gbAI->ResumeLayout(false);
+			this->gbAI->PerformLayout();
+			this->gbPlayer->ResumeLayout(false);
+			this->gbPlayer->PerformLayout();
 			this->ResumeLayout(false);
 			this->PerformLayout();
 
@@ -2334,7 +2630,7 @@ private: System::Void slotMousEnter(System::Object^ sender, System::EventArgs^ e
 			slots[i]->BackColor = System::Drawing::Color::LightPink;
 		}
 	}
-	else if (attackMode)
+	else if (attackMode && label->Text == "")
 	{
 		// The player is thinking about attacking the selected slot
 		label->BackColor = System::Drawing::Color::LightPink;
@@ -2366,7 +2662,7 @@ private: System::Void slotMouseLeave(System::Object^ sender, System::EventArgs^ 
 			slots[i]->BackColor = SystemColors::Control; // Change back to the original color
 		}
 	}
-	else if (attackMode & !gm->AIsTurn())
+	else if (attackMode & !gm->AIsTurn() && label->Text == "")
 	{
 		label->BackColor = SystemColors::Control;
 	}
@@ -2618,24 +2914,24 @@ private: System::Void slotClick(System::Object^ sender, System::EventArgs^ e)
 				Battleships->SelectedIndex = 0; // Select the first item in the list box
 		}
 	}
-	else if (attackMode && !gm->AIsTurn())
+	else if (attackMode && !gm->AIsTurn() && label->Text == "")
 	{
 		Monitor::Enter(gm);
 		gm->playerIsAttacking(); // Start of the player's attack
 		gm->setAttack(label->Name);
 		Monitor::Exit(gm);
 
-		Thread::Sleep(100);
+		Thread::Sleep(500);
 
 		Monitor::Enter(gm);
 		bool x = gm->getAttackResult();
 		if (x) label->Text = "X"; else label->Text = "O";
-		slotMouseLeave(sender, e);
+		label->BackColor = SystemColors::Control; // change the background color back to normal
 		gm->playerIsAttacking(); // End of the player's attack
 		Monitor::Exit(gm);
 
-		Thread::Sleep(100);
-
+		Thread::Sleep(500);
+		displayShipHealthLevels(); // update the health levels on the screen
 	}
 }
 
@@ -2721,7 +3017,12 @@ private: System::Void readyClick(System::Object^ sender, System::EventArgs^ e)
 	btnReady->Enabled = false;
 	btnReset->Enabled = false;
 	gbSetup->Enabled = false;
+	gbSetup->Hide();
+	pnlSetup->Hide(); // Hide the setup panel so that we can show the panel with the health bars of the ships
+	pnlHealth->Visible = true;
 	attackMode = true;
+
+	displayShipHealthLevels();
 }
 
 private: void outputLog(String^ message)
@@ -2733,6 +3034,32 @@ private: void outputLog(String^ message)
 	}
 	else
 		txtOutput->AppendText(message + "\r\n");
+}
+
+private: void displayShipHealthLevels()
+{
+	vector<int> hp = gm->healthLevels(true); // Health level of the human player's ships
+	cli::array<Control^, 1>^ hpPLabels = { lblPCarrierHP, lblPBattleshipHP, lblPCriuserHP, lblPSubmarineHP, lblPDestroyerHP };
+	int i = 0;
+
+	for (vector<int>::iterator it = hp.begin(); it < hp.end(); it++)
+	{
+		// Display the health levels for the human player's ships
+		hpPLabels[i]->Text = "" + *it;
+		i++;
+	}
+
+	hp.clear(); // empty the vector
+	hp = gm->healthLevels(false); // Health levels of the AI's ships
+
+	cli::array<Control^, 1>^ hpALabels = { lblACarrierHP, lblABattleshipHP, lblACriuserHP, lblASubmarineHP, lblADestroyerHP };
+	i = 0;
+	for (vector<int>::iterator it = hp.begin(); it < hp.end(); it++)
+	{
+		// Display the health levels for the AI player's ships
+		hpALabels[i]->Text = "" + *it;
+		i++;
+	}
 }
 };
 }

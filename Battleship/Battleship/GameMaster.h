@@ -42,17 +42,19 @@ public ref class GameMaster
 					if (isAIsTurn && !playersAttack)
 					{
 						succesfullAttack = playerGrid->attackSlot(attackPair);
+						aiGrid->markSlot(attackPair, succesfullAttack);
 					}
 					else
 					{
 						succesfullAttack = aiGrid->attackSlot(attackPair);
+						playerGrid->markSlot(attackPair, succesfullAttack);
 					}
 
 					toggleTurn(); // Toggle the turn
 
 					slotToAttack = "";
 					Monitor::Exit(this); // Ensure that the lock is released as we are done
-					Thread::Sleep(100);
+					Thread::Sleep(500);
 				}
 			}
 		}
@@ -74,6 +76,12 @@ public ref class GameMaster
 		bool AIsTurn() { return isAIsTurn; }
 		bool attackInProgress() { return (slotToAttack != "") ? true : false; } // Check to see if there's already an attack being executed
 		void playerIsAttacking() { playersAttack = !playersAttack; } // Give's the player the ability to inform the GameMaster that its attacking now
+		vector<int> healthLevels(bool hPlayer) // returns the current health levels of ships of the requested player; T = Human, F = AI
+		{
+			if (hPlayer)
+				return playerGrid->getShipHPs();
+			return aiGrid->getShipHPs();
+		}
 		//String^ slotToAttack = "";
 
 	private:

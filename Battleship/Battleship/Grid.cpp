@@ -23,10 +23,11 @@ void Grid::setShip(int shipType, vector<pair<int, int>> loc)
 bool Grid::attackSlot(pair<int, int> slot)
 {
 	// Check if any of the battleships are occupying the selected slot
-	for each (Ship s in battleships)
+	for (vector<Ship>::iterator it = battleships.begin(); it != battleships.end(); it++)
 	{
-		if (s.isOnSlot(slot))
+		if (it->isOnSlot(slot))
 		{
+			it->dealDmg(); // Since the attack was successful, need to deal damage to the ship
 			return true;
 		}
 	}
@@ -45,4 +46,24 @@ bool Grid::slotOccupied(pair<int, int> slot)
 		}
 	}
 	return false;
+}
+
+void Grid::markSlot(pair<int, int> slot, bool success)
+{
+	grid[slot.first][slot.second] = (success == true) ? 1 : -1; // Hit = 1, Miss = -1
+}
+
+bool Grid::isSlotMarked(pair<int, int> slot)
+{
+	return (grid[slot.first][slot.second] != 0) ? true : false;
+}
+
+vector<int> Grid::getShipHPs()
+{
+	vector<int> hp;
+	for (vector<Ship>::iterator it = battleships.begin(); it < battleships.end(); it++)
+	{
+		hp.push_back(it->getShipHP());
+	}
+	return hp;
 }

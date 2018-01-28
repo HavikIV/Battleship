@@ -39,7 +39,7 @@ void Ship::dealDmg()
 // Check to see if the ship has been sunk from the attack
 bool Ship::isSunking()
 {
-	dealDmg(); // The ship has been hit, deal the damage
+	//dealDmg(); // The ship has been hit, deal the damage; Unneeded as dealDmg is called directly when a slot is attacked
 	if (health == 0)
 		return true; // Since the ship's health is 0, it has been sunk
 	return false;
@@ -64,12 +64,17 @@ bool Ship::isOnSlot(pair<int, int> p)
 	{
 		if (x == p)
 		{
-			dealDmg();
+			//dealDmg();
 			return true;
 		}
 	}
 
 	return false;
+}
+
+int Ship::getShipHP()
+{
+	return health;
 }
 
 int Ship::getShipSize()

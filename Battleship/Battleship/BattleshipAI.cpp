@@ -45,7 +45,9 @@ void BattleshipAI::setupGrid()
 			gm->updateShip(false, shipType, slots); // Set the ship on the AI's grid that the GameMaster keeps track of
 			grid->setShip(shipType, slots); // Update the AI's grid so it knows where it's own ships are
 			shipType++; // Increment the shipType so that we can place the next ship on the grid
+			Thread::Sleep(500); // Need to let the thread sleep so that the AI doesn't rapidly call rand()
 		}
+		Thread::Sleep(500);
 	}
 }
 
@@ -57,6 +59,11 @@ void BattleshipAI::attack()
 	// Use rand to generate attack on a random point on the player's grid
 	srand(time(NULL)); // Seed the rand with the current time
 	pair<int, int> slotToAttack = make_pair(rand() % 9, rand() % 9);
+	while (grid->isSlotMarked(slotToAttack))
+	{
+		// Since the slot was previously attacked, let's pick a different slot to attack
+		slotToAttack = make_pair(rand() % 9, rand() % 9);
+	}
 
 	// Convert the point to a String so we can pass it to GameMaster
 	String^ s = "" + (Char)('A' + slotToAttack.first) + (Char)('1' + slotToAttack.second);
@@ -67,7 +74,7 @@ void BattleshipAI::attack()
 
 	// Release the lock
 	Monitor::Exit(gm);
-	Thread::Sleep(100);
+	Thread::Sleep(1000);
 	
 	if (gm->getAttackResult())
 	{
