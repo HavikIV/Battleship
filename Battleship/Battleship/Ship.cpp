@@ -33,7 +33,8 @@ Ship::Ship(int shipType)
 // Since the ship has been hit, need to decrement it's health by one
 void Ship::dealDmg()
 {
-	health--; // decrement health by 1
+	if (health != 0)
+		health--; // decrement health by 1
 }
 
 // Check to see if the ship has been sunk from the attack

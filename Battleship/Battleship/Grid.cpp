@@ -67,3 +67,16 @@ vector<int> Grid::getShipHPs()
 	}
 	return hp;
 }
+
+bool Grid::isAttackedShipSunk(pair<int, int> slot)
+{
+	// Find the Ship that is occupying the given slot
+	for (vector<Ship>::iterator it = battleships.begin(); it != battleships.end(); it++)
+	{
+		if (it->isOnSlot(slot))
+			return it->isSunking(); // Found the ship so check if it has been sunk with the latest attack
+	}
+
+	// Since no Ship was found, return false
+	return false; // Though should never reach here
+}

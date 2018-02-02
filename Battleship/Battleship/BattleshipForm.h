@@ -2630,7 +2630,7 @@ private: System::Void slotMousEnter(System::Object^ sender, System::EventArgs^ e
 			slots[i]->BackColor = System::Drawing::Color::LightPink;
 		}
 	}
-	else if (attackMode && label->Text == "")
+	else if (attackMode && !gm->attackInProgress(true) && label->Text == "")
 	{
 		// The player is thinking about attacking the selected slot
 		label->BackColor = System::Drawing::Color::LightPink;
@@ -2662,7 +2662,7 @@ private: System::Void slotMouseLeave(System::Object^ sender, System::EventArgs^ 
 			slots[i]->BackColor = SystemColors::Control; // Change back to the original color
 		}
 	}
-	else if (attackMode & !gm->AIsTurn() && label->Text == "")
+	else if (attackMode && !gm->attackInProgress(true) && label->Text == "")
 	{
 		label->BackColor = SystemColors::Control;
 	}
@@ -2914,24 +2914,26 @@ private: System::Void slotClick(System::Object^ sender, System::EventArgs^ e)
 				Battleships->SelectedIndex = 0; // Select the first item in the list box
 		}
 	}
-	else if (attackMode && !gm->AIsTurn() && label->Text == "")
+	else if (attackMode && !gm->attackInProgress(true) && label->Text == "")
 	{
 		Monitor::Enter(gm);
-		gm->playerIsAttacking(); // Start of the player's attack
-		gm->setAttack(label->Name);
+		//gm->playerIsAttacking(); // Start of the player's attack
+		gm->setAttack(true, label->Name);
 		Monitor::Exit(gm);
 
 		Thread::Sleep(500);
 
 		Monitor::Enter(gm);
-		bool x = gm->getAttackResult();
+		bool x = gm->getAttackResult(true);
 		if (x) label->Text = "X"; else label->Text = "O";
 		label->BackColor = SystemColors::Control; // change the background color back to normal
-		gm->playerIsAttacking(); // End of the player's attack
+		//gm->playerIsAttacking(); // End of the player's attack
+		outputLog(gm->informPlayer()); // Inform the player what slot the AI had attacked
 		Monitor::Exit(gm);
 
 		Thread::Sleep(500);
 		displayShipHealthLevels(); // update the health levels on the screen
+		checkGameState();
 	}
 }
 
@@ -3059,6 +3061,45 @@ private: void displayShipHealthLevels()
 		// Display the health levels for the AI player's ships
 		hpALabels[i]->Text = "" + *it;
 		i++;
+	}
+}
+
+//	This method checks the current state of the game. It will determine if either player has won the game by destroying the other's ships.
+private: void checkGameState()
+{
+	vector<int> hp = gm->healthLevels(true);
+	int sumHealth = 0;
+	for (int i = 0; i < hp.size(); i++)
+	{
+		sumHealth += hp[i];
+	}
+
+	if (sumHealth == 0)
+	{
+		// The AI has won
+		outputLog("The AI has won the game! Better luck next time human.");
+	}
+	else
+	{
+		sumHealth = 0;
+
+		hp = gm->healthLevels(false);
+		for (int i = 0; i < hp.size(); i++)
+		{
+			sumHealth += hp[i];
+		}
+
+		if (sumHealth == 0)
+		{
+			// The player has won
+			outputLog("Congrats human! You have defeat the AI this round!");
+		}
+	}
+
+	if (sumHealth == 0)
+	{
+		// Since either the player or the AI won the game, we need to prevent the player from picking anymore slots to attack
+		attackMode = false;
 	}
 }
 };

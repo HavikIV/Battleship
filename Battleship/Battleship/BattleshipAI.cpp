@@ -14,7 +14,7 @@ void BattleshipAI::Start()
 
 	while (true)
 	{
-		if (gm->AIsTurn() && !gm->attackInProgress())
+		if (!gm->attackInProgress(false))
 		{
 			attack();
 		}
@@ -33,13 +33,13 @@ void BattleshipAI::setupGrid()
 	while (shipType != 6)
 	{
 		// Generate random numbers between 0 and 9 for the row and column of the random slot
-		row = rand() % 9;
-		col = rand() % 9;
+		row = rand() % 10;
+		col = rand() % 10;
 		// Make a pair with the random numbers
 		pair<int, int> slot = make_pair(row, col);
 
 		// Get a vector of integer pairs of where the ship goes
-		vector<pair<int, int>> slots = findSlots(rand() % 1, shipType, slot);
+		vector<pair<int, int>> slots = findSlots(rand() % 2, shipType, slot);
 		if (!anyOverlaps(slots))
 		{
 			gm->updateShip(false, shipType, slots); // Set the ship on the AI's grid that the GameMaster keeps track of
@@ -47,6 +47,7 @@ void BattleshipAI::setupGrid()
 			shipType++; // Increment the shipType so that we can place the next ship on the grid
 			Thread::Sleep(500); // Need to let the thread sleep so that the AI doesn't rapidly call rand()
 		}
+		gm->setAIGrid(grid);
 		Thread::Sleep(500);
 	}
 }
@@ -58,28 +59,133 @@ void BattleshipAI::attack()
 
 	// Use rand to generate attack on a random point on the player's grid
 	srand(time(NULL)); // Seed the rand with the current time
-	pair<int, int> slotToAttack = make_pair(rand() % 9, rand() % 9);
+	pair<int, int> slotToAttack = make_pair(rand() % 10, rand() % 10);
 	while (grid->isSlotMarked(slotToAttack))
 	{
 		// Since the slot was previously attacked, let's pick a different slot to attack
-		slotToAttack = make_pair(rand() % 9, rand() % 9);
+		slotToAttack = make_pair(rand() % 10, rand() % 10);
 	}
 
 	// Convert the point to a String so we can pass it to GameMaster
 	String^ s = "" + (Char)('A' + slotToAttack.first) + (Char)('1' + slotToAttack.second);
+	if (slotToAttack.second == 9)
+		s = s[0] + "10";
 
 
 	// Attack the point
-	gm->setAttack(s);
+	gm->setAttack(false, s);
 
 	// Release the lock
 	Monitor::Exit(gm);
-	Thread::Sleep(1000);
+
+	// This thread should sleep until the attacks have been processed
+	while (gm->attackInProgress(false))
+	{
+		Thread::Sleep(100);
+	}
+	//Thread::Sleep(1500);
 	
-	if (gm->getAttackResult())
+	Monitor::Enter(gm);
+	if (gm->getAttackResult(false))
 	{
 		// Need to attack the adjacent slots during the following turns until the ship has been sunk
+		pair<int, int> startingPoint = slotToAttack; // Copy of the slot that was successfully attacked
+		bool attackHorizontally = true;
+		//bool attackVertically = false;
+		bool attackRightSide = true;
+		bool attackAbove = true;
+		bool keepLooping = !gm->isShipSunking(startingPoint);
+
+		Monitor::Exit(gm); // Release the lock that was acquired outside the if statement
+
+		while (keepLooping)
+		{
+			// Let's start attacking slots that are horizontally adjacent to the starting point; Start by attacking to the right
+			if (attackHorizontally)
+			{
+				// check if we can move to the right
+				if (slotToAttack.second < 9 && attackRightSide)
+				{
+					slotToAttack.second += 1; // Move one column to the right
+				}
+				else
+				{
+					// Move in the opposite direction from the starting point
+					if (slotToAttack.second > startingPoint.second)
+					{
+						slotToAttack.second = startingPoint.second; // So we don't attack the startingPoint again
+					}
+					slotToAttack.second -= 1; // Move one column to the left
+					attackRightSide = false;
+				}
+			}
+			else
+			{
+				// Time to attack slots that are vertically adjacent to the startingPoint
+				if (slotToAttack.second != startingPoint.second)
+					slotToAttack.second = startingPoint.second; // Make sure that we are attacking slots in the right column
+
+				if (attackAbove && slotToAttack.first > 0)
+				{
+					slotToAttack.first -= 1; // Move up a row
+				}
+				else
+				{
+					if (slotToAttack.first < startingPoint.first)
+					{
+						slotToAttack.first = startingPoint.first; // Making sure that we don't end up attacking the starting point multiple times
+					}
+					slotToAttack.first += 1; // Move down a row
+					attackAbove = false;
+				}
+			}
+
+			Monitor::Enter(gm); // Request a lock before informing the GameMaster what slot to attack for the AI
+			
+			s = "" + (Char)('A' + slotToAttack.first) + (Char)('1' + slotToAttack.second);
+			if (slotToAttack.second == 9)
+				s = s[0] + "10";
+			gm->setAttack(false, s);
+
+			Monitor::Exit(gm); // Release the lock
+
+			//Thread::Sleep(1500); // Give the GameMaster enough time to process the attack before checking the result
+			while (gm->attackInProgress(false))
+			{
+			Thread::Sleep(100);
+			}
+			Monitor::Enter(gm); // Request a lock so the AI can check the result
+			
+			if (attackHorizontally)
+			{
+				if (attackRightSide)
+				{
+					attackRightSide = gm->getAttackResult(false);
+					attackHorizontally = (startingPoint.second == 0) ? false : true; // If the starting point is in the first column, we can't go any further to the left
+				}
+				else
+				{
+					attackHorizontally = gm->getAttackResult(false);
+					//attackVertically = !attackHorizontally;
+				}
+
+			}
+			else
+			{
+				if (attackAbove)
+					attackAbove = gm->getAttackResult(false);
+			}
+
+			// Update the looping condition before the lock is released
+			keepLooping = !gm->isShipSunking(startingPoint);
+			Monitor::Exit(gm); // Release the lock
+
+			//Thread::Sleep(500);
+		}
+		Thread::Sleep(50);
 	}
+	else
+		Monitor::Exit(gm);
 }
 
 // This function takes in a vector of integer pairs that represent slots on the grid that will be occupied by a ship.
