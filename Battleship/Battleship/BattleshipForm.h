@@ -58,10 +58,12 @@ namespace Battleship {
 	private: System::Windows::Forms::Label^  lblPCriuserHP;
 	private: System::Windows::Forms::Label^  lblPBattleshipHP;
 	private: System::Windows::Forms::Label^  lblPCarrierHP;
+	private: System::Windows::Forms::Button^  btnReplay;
 
 
 
 			 GameMaster^ gm;
+			 BattleshipAI^ AI;
 			 delegate void logDelegate(String^ message);
 	public:
 		BattleshipForm(void)
@@ -74,7 +76,7 @@ namespace Battleship {
 			// Let's start up the Game Master and the AI on separate threads
 			//Thread^ gameMasterThread = gcnew Thread(gcnew ThreadStart(this, &BattleshipForm::StartGameMaster)); // Start the function on a separate thread
 			gm = gcnew GameMaster();
-			BattleshipAI^ AI = gcnew BattleshipAI(gm);
+			AI = gcnew BattleshipAI(gm);
 
 			Thread^ gameMasterThread = gcnew Thread(gcnew ThreadStart(gm, &GameMaster::Start));
 			gameMasterThread->Start();
@@ -478,6 +480,7 @@ private: System::Windows::Forms::Button^  btnReset;
 			this->btnReset = (gcnew System::Windows::Forms::Button());
 			this->txtOutput = (gcnew System::Windows::Forms::TextBox());
 			this->pnlSetup = (gcnew System::Windows::Forms::Panel());
+			this->btnReplay = (gcnew System::Windows::Forms::Button());
 			this->pnlHealth = (gcnew System::Windows::Forms::Panel());
 			this->gbAI = (gcnew System::Windows::Forms::GroupBox());
 			this->lblADestroyerHP = (gcnew System::Windows::Forms::Label());
@@ -2328,7 +2331,7 @@ private: System::Windows::Forms::Button^  btnReset;
 			// btnReset
 			// 
 			this->btnReset->Enabled = false;
-			this->btnReset->Location = System::Drawing::Point(166, 195);
+			this->btnReset->Location = System::Drawing::Point(171, 195);
 			this->btnReset->Name = L"btnReset";
 			this->btnReset->Size = System::Drawing::Size(75, 23);
 			this->btnReset->TabIndex = 5;
@@ -2348,12 +2351,25 @@ private: System::Windows::Forms::Button^  btnReset;
 			// 
 			// pnlSetup
 			// 
+			this->pnlSetup->Controls->Add(this->btnReplay);
 			this->pnlSetup->Controls->Add(this->btnReady);
 			this->pnlSetup->Controls->Add(this->btnReset);
 			this->pnlSetup->Location = System::Drawing::Point(486, 174);
 			this->pnlSetup->Name = L"pnlSetup";
 			this->pnlSetup->Size = System::Drawing::Size(266, 228);
 			this->pnlSetup->TabIndex = 7;
+			// 
+			// btnReplay
+			// 
+			this->btnReplay->Enabled = false;
+			this->btnReplay->Location = System::Drawing::Point(90, 195);
+			this->btnReplay->Name = L"btnReplay";
+			this->btnReplay->Size = System::Drawing::Size(75, 23);
+			this->btnReplay->TabIndex = 6;
+			this->btnReplay->Text = L"Replay";
+			this->btnReplay->UseVisualStyleBackColor = true;
+			this->btnReplay->Visible = false;
+			this->btnReplay->Click += gcnew System::EventHandler(this, &BattleshipForm::replayClick);
 			// 
 			// pnlHealth
 			// 
@@ -3100,7 +3116,42 @@ private: void checkGameState()
 	{
 		// Since either the player or the AI won the game, we need to prevent the player from picking anymore slots to attack
 		attackMode = false;
+		// Enable and display the button start a new round of the game
+		btnReplay->Enabled = true;
+		btnReplay->Visible = true;
+		pnlSetup->Show();
 	}
+}
+
+// This method will start a new round of the game state back to ship placement and start a new instances of GameMaster and the AI
+private: System::Void replayClick(System::Object^  sender, System::EventArgs^  e)
+{
+	// Close the previous GameMaster and AI Threads
+	gm->exitThread();
+	AI->exitThread();
+
+	// Lets start new instances of GameMaster and AI for the next round of the game and run them on new separate threads.
+	//NOTE TO SELF: You could always add a method within the two classes that would reset them to beginning again. Just another option.
+	gm = gcnew GameMaster();
+	AI = gcnew BattleshipAI(gm);
+
+	Thread^ gameMasterThread = gcnew Thread(gcnew ThreadStart(gm, &GameMaster::Start));
+	gameMasterThread->Start();
+
+	Thread^ AIThread = gcnew Thread(gcnew ThreadStart(AI, &BattleshipAI::Start));
+	AIThread->Start();
+
+	outputLog("Starting a new round! Good luck player!");
+
+	// Reset the GUI back to the state at start of the game
+	attackMode = true;
+	gbSetup->Enabled = true;
+	gbSetup->Show();
+	pnlHealth->Hide();
+	resetClick(sender, e);
+
+	btnReplay->Enabled = false;
+	btnReplay->Visible = false;
 }
 };
 }

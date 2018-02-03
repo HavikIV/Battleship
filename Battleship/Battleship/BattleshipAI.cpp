@@ -12,7 +12,7 @@ void BattleshipAI::Start()
 {
 	setupGrid(); // Setup the AI's grid
 
-	while (true)
+	while (keepThreadAlive)
 	{
 		if (!gm->attackInProgress(false))
 		{
@@ -98,7 +98,7 @@ void BattleshipAI::attack()
 
 		Monitor::Exit(gm); // Release the lock that was acquired outside the if statement
 
-		while (keepLooping)
+		while (keepLooping && keepThreadAlive)
 		{
 			// Let's start attacking slots that are horizontally adjacent to the starting point; Start by attacking to the right
 			if (attackHorizontally)
@@ -150,7 +150,7 @@ void BattleshipAI::attack()
 			Monitor::Exit(gm); // Release the lock
 
 			//Thread::Sleep(1500); // Give the GameMaster enough time to process the attack before checking the result
-			while (gm->attackInProgress(false))
+			while (gm->attackInProgress(false) && keepThreadAlive)
 			{
 			Thread::Sleep(100);
 			}
@@ -186,6 +186,11 @@ void BattleshipAI::attack()
 	}
 	else
 		Monitor::Exit(gm);
+}
+
+void BattleshipAI::exitThread()
+{
+	keepThreadAlive = false;
 }
 
 // This function takes in a vector of integer pairs that represent slots on the grid that will be occupied by a ship.
@@ -225,7 +230,7 @@ vector<pair<int, int>> BattleshipAI::findSlots(bool orientation, int shipType, p
 	// Find the horizontally adjacent points to the given point
 	if (orientation)
 	{
-		int leftSide = noOfPointsToFind / 2; // number of the points to find to the right of the given point
+		int leftSide = noOfPointsToFind / 2; // number of the points to find to the left of the given point
 		if (p.second - leftSide < 0)
 		{
 			leftSide = leftSide + (p.second - leftSide); // adjust the number of points to find on the left side so we don't go off the grid
@@ -235,13 +240,13 @@ vector<pair<int, int>> BattleshipAI::findSlots(bool orientation, int shipType, p
 		// Make sure that there's enough points on the right side so that we don't go off the grid, otherwise adjust both sides
 		if (p.second + rightSide > 9)
 		{
-			int adjustment = rightSide - ((p.second + rightSide) - 9); // The number of points that go off grid
+			int adjustment = (p.second + rightSide) - 9; // The number of points that go off grid
 			rightSide -= adjustment; // Adjust how many points to find on the right side of the given point
 			leftSide += adjustment; // Adjust how many points to find on the left side of the given point
 		}
 
-		// Find all of the points on the right side and add them to the vector
-		for (int i = rightSide; i > 0; i--)
+		// Find all of the points on the left side and add them to the vector
+		for (int i = leftSide; i > 0; i--)
 		{
 			pair<int, int> point = make_pair(p.first, p.second - i);
 			points.push_back(point);
@@ -250,8 +255,8 @@ vector<pair<int, int>> BattleshipAI::findSlots(bool orientation, int shipType, p
 		// Add the given point to the vector
 		points.push_back(p);
 
-		// Find all of the points on the left side and add them to the vector
-		for (int i = 1; i <= leftSide; i++)
+		// Find all of the points on the right side and add them to the vector
+		for (int i = 1; i <= rightSide; i++)
 		{
 			pair<int, int> point = make_pair(p.first, p.second + i);
 			points.push_back(point);
@@ -269,7 +274,7 @@ vector<pair<int, int>> BattleshipAI::findSlots(bool orientation, int shipType, p
 		// Make sure that we don't go off grid when looking for point below the given point, otherwise adjust both above and below
 		if (p.first + below > 9)
 		{
-			int adjustment = below - ((p.first + below) - 9); // The number of points that go off grid
+			int adjustment = (p.first + below) - 9; // The number of points that go off grid
 			below -= adjustment; // Adjust how many points to find below the given point
 			above += adjustment; // Adjust how many points to find above the given point
 		}

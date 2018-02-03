@@ -22,7 +22,7 @@ public ref class GameMaster
 		GameMaster() { playerGrid = new Grid(); aiGrid = new Grid(); }
 		void Start()
 		{
-			while (true)
+			while (keepThreadAlive)
 			{
 				if (timeToProcessAttacks())
 				{
@@ -109,6 +109,7 @@ public ref class GameMaster
 			return aiGrid->getShipHPs();
 		}
 		String^ informPlayer() { return sendToPlayer; };
+		void exitThread() { keepThreadAlive = false; } // Time to kill the thread so we will change the loop boolean to false so the while loop ends
 
 	private:
 		//Label^ output;
@@ -119,6 +120,7 @@ public ref class GameMaster
 		Grid* aiGrid;
 		bool pSuccessfulAttack;
 		bool aiSuccessfulAttack;
+		bool keepThreadAlive = true;
 		//bool isAIsTurn = false;
 		//bool playersAttack = false;
 };
