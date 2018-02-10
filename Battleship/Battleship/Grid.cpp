@@ -80,3 +80,35 @@ bool Grid::isAttackedShipSunk(pair<int, int> slot)
 	// Since no Ship was found, return false
 	return false; // Though should never reach here
 }
+
+vector<vector<pair<int, int>>> Grid::attackData()
+{
+	vector<vector<pair<int, int>>> p;
+
+	for (vector<vector<int>>::iterator it = grid.begin(); it != grid.end(); it++)
+	{
+		vector<pair<int, int>> temp;
+		for (vector<int>::iterator j = it->begin(); j != it->end(); j++)
+		{
+			temp.push_back(make_pair((*j == 0) ? 0 : 1, 1));
+		}
+		p.push_back(temp);
+	}
+
+	return p;
+}
+
+void Grid::attackData(vector<vector<pair<int, int>>>* data)
+{
+	vector<vector<pair<int, int>>>::iterator d_it = data->begin();
+
+	for (vector<vector<int>>::iterator it = grid.begin(); it != grid.end(); it++, d_it++)
+	{
+		vector<pair<int, int>>::iterator i = d_it->begin();
+		for (vector<int>::iterator j = it->begin(); j != it->end(); j++, i++)
+		{
+			i->first += (*j == 1) ? 1 : 0;
+			i->second += 1;
+		}
+	}
+}

@@ -63,7 +63,7 @@ public ref class GameMaster
 					//toggleTurn(); // Toggle the turn
 
 					// Now that the attacks have been processed, we need to clear out the attack strings so that the players can perform another attack
-					sendToPlayer = aiSlotToAttack + "-> " + aiSuccessfulAttack; // Save the AI's attack so we can inform the player of it
+					sendToPlayer = "AI attacked " + aiSlotToAttack + " -> " + ((aiSuccessfulAttack) ? "hit." : "miss."); // Inform the player of the AI's attack
 					pSlotToAttack = "";
 					aiSlotToAttack = "";
 					Monitor::Exit(this); // Ensure that the lock is released as we are done
@@ -100,7 +100,7 @@ public ref class GameMaster
 		//void toggleTurn() { isAIsTurn = !isAIsTurn;  } // Toggle the turn
 		//bool AIsTurn() { return isAIsTurn; }
 		bool attackInProgress(bool hPlayer) { return hPlayer ? (pSlotToAttack != "") : (aiSlotToAttack != ""); } // Check to see if there's already an attack being executed
-		bool isShipSunking(pair<int, int> slot) { return playerGrid->isAttackedShipSunk(slot); } // Lets the AI know if it sunk the ship it is attacking
+		bool isShipSinking(pair<int, int> slot) { return playerGrid->isAttackedShipSunk(slot); } // Lets the AI know if it sunk the ship it is attacking
 		//void playerIsAttacking() { playersAttack = !playersAttack; } // Give's the player the ability to inform the GameMaster that its attacking now
 		vector<int> healthLevels(bool hPlayer) // returns the current health levels of ships of the requested player; T = Human, F = AI
 		{
@@ -110,6 +110,8 @@ public ref class GameMaster
 		}
 		String^ informPlayer() { return sendToPlayer; };
 		void exitThread() { keepThreadAlive = false; } // Time to kill the thread so we will change the loop boolean to false so the while loop ends
+		void savePlayerAttackData();
+		//void (*log); //function pointer to the log function in the BattleshipForm class
 
 	private:
 		//Label^ output;

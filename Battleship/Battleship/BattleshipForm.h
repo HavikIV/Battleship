@@ -77,6 +77,9 @@ namespace Battleship {
 			//Thread^ gameMasterThread = gcnew Thread(gcnew ThreadStart(this, &BattleshipForm::StartGameMaster)); // Start the function on a separate thread
 			gm = gcnew GameMaster();
 			AI = gcnew BattleshipAI(gm);
+			/*logDelegate^ d = gcnew logDelegate(this, &BattleshipForm::outputLog);
+			IntPtr ip = Runtime::InteropServices::Marshal::GetFunctionPointerForDelegate(d);
+			gm->log = (void*)ip;*/
 
 			Thread^ gameMasterThread = gcnew Thread(gcnew ThreadStart(gm, &GameMaster::Start));
 			gameMasterThread->Start();
@@ -2937,17 +2940,21 @@ private: System::Void slotClick(System::Object^ sender, System::EventArgs^ e)
 		gm->setAttack(true, label->Name);
 		Monitor::Exit(gm);
 
-		Thread::Sleep(500);
+		while (gm->attackInProgress(true))
+		{
+			Thread::Sleep(100);
+		}
 
 		Monitor::Enter(gm);
 		bool x = gm->getAttackResult(true);
 		if (x) label->Text = "X"; else label->Text = "O";
 		label->BackColor = SystemColors::Control; // change the background color back to normal
 		//gm->playerIsAttacking(); // End of the player's attack
+		//outputLog("Player attacked " + label->Name + " for a " + ((x) ? "hit." : "miss."));
 		outputLog(gm->informPlayer()); // Inform the player what slot the AI had attacked
 		Monitor::Exit(gm);
 
-		Thread::Sleep(500);
+		Thread::Sleep(100);
 		displayShipHealthLevels(); // update the health levels on the screen
 		checkGameState();
 	}
@@ -3129,6 +3136,10 @@ private: System::Void replayClick(System::Object^  sender, System::EventArgs^  e
 	// Close the previous GameMaster and AI Threads
 	gm->exitThread();
 	AI->exitThread();
+
+	AI->saveAttackData();
+
+	Thread::Sleep(500); // Give enough time for the threads to close
 
 	// Lets start new instances of GameMaster and AI for the next round of the game and run them on new separate threads.
 	//NOTE TO SELF: You could always add a method within the two classes that would reset them to beginning again. Just another option.

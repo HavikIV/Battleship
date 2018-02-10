@@ -22,6 +22,8 @@ class Grid
 		bool isSlotMarked(pair<int, int> slot); // Checks to see if the given slot has already been marked by an attach
 		vector<int> getShipHPs(); // Returns a vector of the current health levels of the ships
 		bool isAttackedShipSunk(pair<int, int> slot); // Check if the attacked ship has sunk or not
+		vector<vector<pair<int, int>>> attackData(); // creates an 2D vector of integer pairs representing the slots that were attack; only called when no previous data exists
+		void attackData(vector<vector<pair<int, int>>>* data); // updates the attack data with the current game's attacks
 		//vector<vector<int>> grid; // vector that will act as a grid
 
 	private:

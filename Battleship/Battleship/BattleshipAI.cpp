@@ -6,10 +6,12 @@ BattleshipAI::BattleshipAI(GameMaster^ g)
 {
 	gm = g;
 	grid = new Grid();
+	aiAttackData = new vector<vector<pair<int, int>>>();
 }
 
 void BattleshipAI::Start()
 {
+	loadAttackData(); // load attack data if it exists
 	setupGrid(); // Setup the AI's grid
 
 	while (keepThreadAlive)
@@ -94,7 +96,7 @@ void BattleshipAI::attack()
 		//bool attackVertically = false;
 		bool attackRightSide = true;
 		bool attackAbove = true;
-		bool keepLooping = !gm->isShipSunking(startingPoint);
+		bool keepLooping = !gm->isShipSinking(startingPoint);
 
 		Monitor::Exit(gm); // Release the lock that was acquired outside the if statement
 
@@ -177,7 +179,7 @@ void BattleshipAI::attack()
 			}
 
 			// Update the looping condition before the lock is released
-			keepLooping = !gm->isShipSunking(startingPoint);
+			keepLooping = !gm->isShipSinking(startingPoint);
 			Monitor::Exit(gm); // Release the lock
 
 			//Thread::Sleep(500);
@@ -298,4 +300,183 @@ vector<pair<int, int>> BattleshipAI::findSlots(bool orientation, int shipType, p
 	}
 
 	return points; // Return the vector of points that were found
+}
+
+void BattleshipAI::saveAttackData()
+{
+	try
+	{
+		vector<vector<pair<int, int>>> p;
+		// Fill up the attack data
+		if (aiAttackData == NULL)
+		{
+			p = grid->attackData();
+			aiAttackData = &p;
+		}
+		else
+			grid->attackData(aiAttackData);
+
+		String^ contentToWrite = "{\n";
+		int row = 0;
+		// Serialize the attack data into a Json String so we can write it to a file
+		for (vector<vector<pair<int, int>>>::iterator it = aiAttackData->begin(); it != aiAttackData->end(); it++)
+		{
+			contentToWrite += "\t{ " + row + ":";
+			for (vector<pair<int, int>>::iterator j = it->begin(); j != it->end(); j++)
+			{
+				contentToWrite += " {" + j->first + " " + j->second + "}";
+			}
+			contentToWrite += " }\n"; // add a newline to the string
+			row++;
+		}
+		contentToWrite += "}\n";
+
+		string content = msclr::interop::marshal_as<string>(contentToWrite);
+		fstream fs;
+		fs.open("data.txt", fstream::out); // Open file for writing
+		fs << content; // write to file
+		fs.close(); // close file
+	}
+	catch (Exception^ e)
+	{
+		Console::Write("An Exception occurred: " + e->ToString());
+	}
+}
+
+void BattleshipAI::loadAttackData()
+{
+	try
+	{
+		//StreamReader^ din = File::OpenText("data.txt"); // Try to open the file containing the attack data
+		fstream fs;
+		fs.open("data.txt", fstream::in); // Open file for read only
+
+		string content;
+		// Keep reading from the file until end of file
+		while (fs.peek() != EOF)
+		{
+			string line;
+			getline(fs, line, '\n'); // read a line until a newline and store in the line string variable
+			content += line; // append the string to the content variable
+		}
+		
+		fs.close(); // close the file stream as it's no longer needed
+
+		// Deserialize it into a 2D vector of pairs
+		if (!content.empty()) // only if the file isn't empty
+		{
+			// Lets make sure the aiAtttackData vector is empty
+			if (aiAttackData != NULL)
+				aiAttackData->clear(); // Removes everything from the vector
+			int index = 0;
+			while (content[index] != ':') // Ignore everything before the first :
+			{
+				index++;
+			}
+			for (int i = 0; i < 10; i++)
+			{
+				vector<pair<int, int>> vp;
+				while (content[index] != '\t' && index < content.size())
+				{
+					if (content[index] == '{')
+					{
+						// Get the two numbers within the two brackets
+						string first; // first number
+						string second; // second number
+						while (content[++index] != ' ')
+						{
+							first += content[index];
+						}
+						while (content[++index] != '}')
+						{
+							second += content[index];
+						}
+
+						// Convert the two strings into integers and make a pair value to store in the vp vector
+						vp.push_back(make_pair(stoi(first), stoi(second)));
+					}
+					index++;
+				}
+				aiAttackData->push_back(vp);
+				while (content[index] != ':' && index < content.size()) // Ignore everything until a : for the next iteration of the for loop
+				{
+					index++;
+				}
+			}
+		}
+	}
+	catch (Exception^ e)
+	{
+		Console::Write("An Exception occurred: " + e->ToString());
+	}
+}
+
+void BattleshipAI::loadPlayerAttackData()
+{
+	try
+	{
+		//StreamReader^ din = File::OpenText("data.txt"); // Try to open the file containing the attack data
+		fstream fs;
+		fs.open("pData.txt", fstream::in); // Open file for read only
+
+		string content;
+		// Keep reading from the file until end of file
+		while (fs.peek() != EOF)
+		{
+			string line;
+			getline(fs, line, '\n'); // read a line until a newline and store in the line string variable
+			content += line; // append the string to the content variable
+		}
+
+		fs.close(); // close the file stream as it's no longer needed
+
+		// Deserialize it into a 2D vector of pairs
+		if (!content.empty()) // only if the file isn't empty
+		{
+			// Lets make sure the aiAtttackData vector is empty
+			if (pAttackData != NULL)
+				pAttackData->clear(); // Removes everything from the vector
+			else
+				pAttackData = new vector<vector<pair<int, int>>>(); // Create a new 2D vector of integer pairs
+			int index = 0;
+			while (content[index] != ':') // Ignore everything before the first :
+			{
+				index++;
+			}
+			for (int i = 0; i < 10; i++)
+			{
+				vector<pair<int, int>> vp;
+				while (content[index] != '\t' && index < content.size())
+				{
+					if (content[index] == '{')
+					{
+						// Get the two numbers within the two brackets
+						string first; // first number
+						string second; // second number
+						while (content[++index] != ' ')
+						{
+							first += content[index];
+						}
+						while (content[++index] != '}')
+						{
+							second += content[index];
+						}
+
+						// Convert the two strings into integers and make a pair value to store in the vp vector
+						vp.push_back(make_pair(stoi(first), stoi(second)));
+					}
+					index++;
+				}
+				pAttackData->push_back(vp);
+				while (content[index] != ':' && index < content.size()) // Ignore everything until a : for the next iteration of the for loop
+				{
+					index++;
+				}
+			}
+		}
+	}
+	catch (Exception^ e)
+	{
+		Console::Write("An Exception occurred: " + e->ToString());
+	}
 }
