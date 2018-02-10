@@ -74,7 +74,7 @@ bool Grid::isAttackedShipSunk(pair<int, int> slot)
 	for (vector<Ship>::iterator it = battleships.begin(); it != battleships.end(); it++)
 	{
 		if (it->isOnSlot(slot))
-			return it->isSunking(); // Found the ship so check if it has been sunk with the latest attack
+			return it->isSinking(); // Found the ship so check if it has been sunk with the latest attack
 	}
 
 	// Since no Ship was found, return false

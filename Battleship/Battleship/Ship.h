@@ -15,7 +15,7 @@ class Ship
 		Ship();	// default constructor which will create a destroyer with 2 health
 		Ship(int shipType); // Custom constructor which creates a ship with the provided shipType # ( 1 = carrier, 2 = battleship, 3 = cruiser, 4 = submarine, 5 = destroyer)
 		void dealDmg(); // This method will decrement the ship's health by 1 every time it is called
-		bool isSunking(); // This method returns true if the attack sunk the ship (health = 0); dealDmg() is called within this method
+		bool isSinking(); // This method returns true if the attack sunk the ship (health = 0); dealDmg() is called within this method
 		void setLocation(vector<pair<int, int>> loc); // Set the slots the ship is occupying on the grid;
 		vector<pair<int, int>> getLocation(); // Returns a vector containing the slot locations that the ship is occupying
 		bool isOnSlot(pair<int, int> p); // Check to see if the ship is occupying the given slot on the grid

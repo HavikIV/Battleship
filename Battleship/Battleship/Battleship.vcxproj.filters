@@ -53,7 +53,4 @@
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="Newtonsoft.Json.dll" />
-  </ItemGroup>
 </Project>
