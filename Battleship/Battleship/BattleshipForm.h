@@ -3133,11 +3133,14 @@ private: void checkGameState()
 // This method will start a new round of the game state back to ship placement and start a new instances of GameMaster and the AI
 private: System::Void replayClick(System::Object^  sender, System::EventArgs^  e)
 {
-	// Close the previous GameMaster and AI Threads
+	// Let's save the attack data before closing the threads
+	AI->saveAttackData(); // Save the AI's attack data
+	auto pData = gm->getPlayerAttackData(); // Fuck it, I'm using auto instead of typing out the full return type as it was getting annoying
+	AI->savePlayerAttackData(pData); // Save the player's attack data
+	
+	// Close the previous GameMaster and AI Threads by allowing the threads to exit their Start while loops
 	gm->exitThread();
 	AI->exitThread();
-
-	AI->saveAttackData();
 
 	Thread::Sleep(500); // Give enough time for the threads to close
 

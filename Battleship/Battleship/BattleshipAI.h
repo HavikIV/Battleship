@@ -21,9 +21,10 @@ public ref class BattleshipAI
 		void exitThread(); // Time to kill the thread so we will change the looping boolean to false so the while loop ends
 		void saveAttackData(); // Save the attacks that the AI has made this round to a file, so it can include them in its analysis next round
 		void loadAttackData(); // Reads the file containing the attacks made in previous rounds
+		void savePlayerAttackData(vector<vector<pair<int, int>>> pData);
 		void loadPlayerAttackData(); // Reads the file containing the attacks made by the player in previous rounds
-		void smartAttack(); // perform an attack based on the AI's data from previous games
-		void smartGridSetup(); // setup the grid by placing all of the AI's ships based on AI's analysis of the Player's attack data from previous games
+		//void smartAttack(); // perform an attack based on the AI's data from previous games
+		//void smartGridSetup(); // setup the grid by placing all of the AI's ships based on AI's analysis of the Player's attack data from previous games
 
 	private:
 		Grid* grid;

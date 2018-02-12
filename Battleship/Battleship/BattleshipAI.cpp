@@ -12,6 +12,7 @@ BattleshipAI::BattleshipAI(GameMaster^ g)
 void BattleshipAI::Start()
 {
 	loadAttackData(); // load attack data if it exists
+	loadPlayerAttackData();
 	setupGrid(); // Setup the AI's grid
 
 	while (keepThreadAlive)
@@ -308,7 +309,7 @@ void BattleshipAI::saveAttackData()
 	{
 		vector<vector<pair<int, int>>> p;
 		// Fill up the attack data
-		if (aiAttackData == NULL)
+		if (aiAttackData == NULL || aiAttackData->size() == 0)
 		{
 			p = grid->attackData();
 			aiAttackData = &p;
@@ -404,6 +405,76 @@ void BattleshipAI::loadAttackData()
 				}
 			}
 		}
+	}
+	catch (Exception^ e)
+	{
+		Console::Write("An Exception occurred: " + e->ToString());
+	}
+}
+
+void BattleshipAI::savePlayerAttackData(vector<vector<pair<int, int>>> pData)
+{
+	try
+	{
+		if (pAttackData == NULL)
+			pAttackData = new vector<vector<pair<int, int>>>(); // Create a new 2D vector of integer pairs
+
+		String^ contentToWrite;
+		if (pAttackData->size() != 0)
+		{
+			// Update the pAttackData with the pData
+			for (vector<vector<pair<int, int>>>::iterator d_it = pData.begin(), it = pAttackData->begin(); d_it != pData.end(); d_it++, it++)
+			{
+				for (vector<pair<int, int>>::iterator d_pit = d_it->begin(), pit = it->begin(); d_pit != d_it->end(); d_pit++, pit++)
+				{
+					pit->first += d_pit->first; // Increases the number of hits on this slot
+					pit->second += 1; // Increment the number of rounds played
+				}
+			}
+
+			// Now that the player attack data has been updated, lets write it to file
+			// Before writing everything to file, convert it into a string; Using String^ instead of string as the compiler defaults "blah" to be String^ objects
+			contentToWrite = "{\n";
+			int row = 0;
+			// Serialize the attack data into a Json String so we can write it to a file
+			for (vector<vector<pair<int, int>>>::iterator it = aiAttackData->begin(); it != aiAttackData->end(); it++)
+			{
+				contentToWrite += "\t{ " + row + ":";
+				for (vector<pair<int, int>>::iterator j = it->begin(); j != it->end(); j++)
+				{
+					contentToWrite += " {" + j->first + " " + j->second + "}";
+				}
+				contentToWrite += " }\n"; // add a newline to the string
+				row++;
+			}
+			contentToWrite += "}\n";
+		}
+		else
+		{
+			// Since there isn't any previous player attack data, just write the pData to the file
+			contentToWrite = "{\n";
+			int row = 0;
+			// Serialize the attack data into a Json String so we can write it to a file
+			for (vector<vector<pair<int, int>>>::iterator it = pData.begin(); it != pData.end(); it++)
+			{
+				contentToWrite += "\t{ " + row + ":";
+				for (vector<pair<int, int>>::iterator j = it->begin(); j != it->end(); j++)
+				{
+					contentToWrite += " {" + j->first + " " + j->second + "}";
+				}
+				contentToWrite += " }\n"; // add a newline to the string
+				row++;
+			}
+			contentToWrite += "}\n";
+		}
+
+		// Convert the String^ to string for it to be compatible with fstream's << operator
+		string content = msclr::interop::marshal_as<string>(contentToWrite);
+		// Write to file
+		fstream fs;
+		fs.open("pData.txt", fstream::out); // Open file for writing
+		fs << content; // write to file
+		fs.close(); // close file
 	}
 	catch (Exception^ e)
 	{

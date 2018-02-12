@@ -110,7 +110,11 @@ public ref class GameMaster
 		}
 		String^ informPlayer() { return sendToPlayer; };
 		void exitThread() { keepThreadAlive = false; } // Time to kill the thread so we will change the loop boolean to false so the while loop ends
-		void savePlayerAttackData();
+		vector<vector<pair<int, int>>> getPlayerAttackData() // Returns the player's attack data from the current round
+		{
+			auto p = playerGrid->attackData();
+			return p;
+		}
 		//void (*log); //function pointer to the log function in the BattleshipForm class
 
 	private:
