@@ -1,5 +1,6 @@
 #include "BattleshipAI.h"
 
+// custom method of sorting for vector<pair<pair<int, int>, float>> lists in descending order
 struct descendingOrder
 {
 	inline bool operator() (const pair<pair<int, int>, float> &a, const pair<pair<int, int>, float> &b)
@@ -900,6 +901,9 @@ vector<pair<int, int>> BattleshipAI::getSlotlist()
 	// let's sort the vector by the float value in descending order
 	sort(v.begin(), v.end(), descendingOrder());
 
+	// Let's randomize the slots that have an equal chance of being attacked
+	randomizeEquals(v);
+
 	// Now that the slots have been order in descending order we can add the pairs of integers to a vector that will be returned to the caller
 	vector<pair<int, int>> slots; // vector of integer pairs representing a slot's location on the grid
 	for (auto it = v.begin(); it != v.end(); it++)
@@ -908,6 +912,17 @@ vector<pair<int, int>> BattleshipAI::getSlotlist()
 	}
 
 	return slots;
+}
+
+void BattleshipAI::randomizeEquals(vector<pair<pair<int, int>, float>> v)
+{
+	for (auto it = v.begin(); it != v.end(); it++)
+	{
+		if (it->second == (it + 1)->second)
+		{
+			swap(it, (it + 1)); // Lets swap the two elements as they have an equal chance of being attacked
+		}
+	}
 }
 
 // This helper function will search within the given quadrant in pAttackData to find the slot with the least chance of being attacked by the player.

@@ -40,6 +40,7 @@ public ref class BattleshipAI
 		bool anyOverlaps(vector<pair<int, int>> slots); // Check to see if there will be an overlap when trying to place a ship at the given point
 		vector<pair<int, int>> findSlots(bool orientation, int shipType, pair<int, int> p); // Finds the slots that the ship of the given type will occupy based on the given point on the grid
 		vector<pair<int, int>> getSlotlist(); // Returns a vector of integer pairs representing slot locations in order of most hits to least hits
+		void randomizeEquals(vector<pair<pair<int, int>, float>> v); // Randomize the elements that have an equal chance of being attacked
 		pair<int, int> getSlotInQuadrant(int Quadrant); // This helper function will search within the given quadrant to find the first slot with the least chance of being attacked by the player
 		float getOverallPercentage(vector<pair<int, int>> possiblePlacement); // This helper function will calculate the overall percentage of being attacked by averaging the hit chances
 		bool slotWithinPlacement(vector<pair<int, int>> placement, pair<int, int> slot); // This helper function will check whether or not the given slot is within the given placement
