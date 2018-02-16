@@ -2605,6 +2605,7 @@ private: System::Windows::Forms::Button^  btnReset;
 			this->Controls->Add(this->panel1);
 			this->Name = L"BattleshipForm";
 			this->Text = L"Battleship";
+			this->FormClosing += gcnew System::Windows::Forms::FormClosingEventHandler(this, &BattleshipForm::BattleshipForm_FormClosing);
 			this->panel1->ResumeLayout(false);
 			this->panel1->PerformLayout();
 			this->panel3->ResumeLayout(false);
@@ -3133,10 +3134,10 @@ private: void checkGameState()
 // This method will start a new round of the game state back to ship placement and start a new instances of GameMaster and the AI
 private: System::Void replayClick(System::Object^  sender, System::EventArgs^  e)
 {
-	// Let's save the attack data before closing the threads
-	AI->saveAttackData(); // Save the AI's attack data
-	auto pData = gm->getPlayerAttackData(); // Fuck it, I'm using auto instead of typing out the full return type as it was getting annoying
-	AI->savePlayerAttackData(pData); // Save the player's attack data
+	//// Let's save the attack data before closing the threads
+	//AI->saveAttackData(); // Save the AI's attack data
+	//auto pData = gm->getPlayerAttackData(); // Fuck it, I'm using auto instead of typing out the full return type as it was getting annoying
+	//AI->savePlayerAttackData(pData); // Save the player's attack data
 	
 	// Close the previous GameMaster and AI Threads by allowing the threads to exit their Start while loops
 	gm->exitThread();
@@ -3158,7 +3159,7 @@ private: System::Void replayClick(System::Object^  sender, System::EventArgs^  e
 	outputLog("Starting a new round! Good luck player!");
 
 	// Reset the GUI back to the state at start of the game
-	attackMode = true;
+	inSetupMode = true;
 	gbSetup->Enabled = true;
 	gbSetup->Show();
 	pnlHealth->Hide();
@@ -3166,6 +3167,26 @@ private: System::Void replayClick(System::Object^  sender, System::EventArgs^  e
 
 	btnReplay->Enabled = false;
 	btnReplay->Visible = false;
+}
+
+// This function will handle the form closing event
+private: System::Void BattleshipForm_FormClosing(System::Object^  sender, System::Windows::Forms::FormClosingEventArgs^  e)
+{
+	// Inform the user that we're closing the threads down and saving the attack data
+	outputLog("Shutting down the threads for the GameMaster and AI.");
+
+	// Since the user is closing the application, we need to save the attack data before closing
+	// and need to do some cleanup e.g. close the threads that were started
+	gm->exitThread();
+	AI->exitThread();
+
+	outputLog("Saving the attack data.");
+
+	// Give them enough time to finish up closing
+	Thread::Sleep(500);
+
+	outputLog("Data saved.");
+	outputLog("Good bye.");
 }
 };
 }

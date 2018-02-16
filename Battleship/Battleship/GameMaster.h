@@ -33,16 +33,16 @@ public ref class GameMaster
 					pair<int, int> pAttackPair = convertAttackString(pSlotToAttack); // The slot that the player is attacking on the AI's grid
 					pair<int, int> aiAttackPair = convertAttackString(aiSlotToAttack); // The sot that the AI is attacking on the player's grid
 
-					if (pAttackPair.first < 0 || pAttackPair.first > 9 || pAttackPair.second < 0 || pAttackPair.second > 9)
-					{
-						// out of range
-						sendToPlayer = "Player's attack is out range";
-					}
-					else if (aiAttackPair.first < 0 || aiAttackPair.first > 9 || aiAttackPair.second < 0 || aiAttackPair.second > 9)
-					{
-						// Ai's attack is out range
-						sendToPlayer = "AI's attack is out of range";
-					}
+					//if (pAttackPair.first < 0 || pAttackPair.first > 9 || pAttackPair.second < 0 || pAttackPair.second > 9)
+					//{
+					//	// out of range
+					//	sendToPlayer = "Player's attack is out range";
+					//}
+					//else if (aiAttackPair.first < 0 || aiAttackPair.first > 9 || aiAttackPair.second < 0 || aiAttackPair.second > 9)
+					//{
+					//	// Ai's attack is out range
+					//	sendToPlayer = "AI's attack is out of range";
+					//}
 
 					// Process the player's attack on the AI's grid
 					pSuccessfulAttack = aiGrid->attackSlot(pAttackPair);

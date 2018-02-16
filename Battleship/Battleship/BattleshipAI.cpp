@@ -1,5 +1,13 @@
 #include "BattleshipAI.h"
 
+struct descendingOrder
+{
+	inline bool operator() (const pair<pair<int, int>, float> &a, const pair<pair<int, int>, float> &b)
+	{
+		return a.second > b.second;
+	}
+};
+
 // This constructor takes in a pointer to an instance of GameMaster and it will also create a new Grid
 // the AI will populate with its own ships.
 BattleshipAI::BattleshipAI(GameMaster^ g)
@@ -13,15 +21,36 @@ void BattleshipAI::Start()
 {
 	loadAttackData(); // load attack data if it exists
 	loadPlayerAttackData();
-	setupGrid(); // Setup the AI's grid
+
+	if (pAttackData == NULL || pAttackData->size() == 0)
+	{
+		setupGrid(); // Setup the AI's grid by randomly selecting slots
+	}
+	else
+	{
+		smartGridSetup(); // Setup the AI's grid based on the player's attack data
+	}
 
 	while (keepThreadAlive)
 	{
 		if (!gm->attackInProgress(false))
 		{
-			attack();
+			if (pAttackData == NULL || pAttackData->size() == 0)
+			{
+				// Since no previous data exists, let's attack randomly
+				attack();
+			}
+			else
+			{
+				// Time to attack using the previous attack data
+				smartAttack();
+			}
 		}
 	}
+
+	// Before exiting the thread, lets both players attack data
+	saveAttackData(); // Save the AI's attack data from this round
+	savePlayerAttackData(gm->getPlayerAttackData()); // Save the player's attack data
 }
 
 void BattleshipAI::setupGrid()
@@ -82,14 +111,14 @@ void BattleshipAI::attack()
 	Monitor::Exit(gm);
 
 	// This thread should sleep until the attacks have been processed
-	while (gm->attackInProgress(false))
+	while (gm->attackInProgress(false) && keepThreadAlive)
 	{
 		Thread::Sleep(100);
 	}
 	//Thread::Sleep(1500);
 	
 	Monitor::Enter(gm);
-	if (gm->getAttackResult(false))
+	if (gm->getAttackResult(false) && keepThreadAlive)
 	{
 		// Need to attack the adjacent slots during the following turns until the ship has been sunk
 		pair<int, int> startingPoint = slotToAttack; // Copy of the slot that was successfully attacked
@@ -134,12 +163,18 @@ void BattleshipAI::attack()
 				}
 				else
 				{
+					if (attackAbove)
+					{
+						attackAbove = false;
+					}
 					if (slotToAttack.first < startingPoint.first)
 					{
 						slotToAttack.first = startingPoint.first; // Making sure that we don't end up attacking the starting point multiple times
 					}
-					slotToAttack.first += 1; // Move down a row
-					attackAbove = false;
+					if (slotToAttack.first < 9)
+					{
+						slotToAttack.first += 1; // Move down a row
+					}
 				}
 			}
 
@@ -164,7 +199,11 @@ void BattleshipAI::attack()
 				if (attackRightSide)
 				{
 					attackRightSide = gm->getAttackResult(false);
-					attackHorizontally = (startingPoint.second == 0) ? false : true; // If the starting point is in the first column, we can't go any further to the left
+					if (!attackRightSide)
+					{
+						// Since the current attack on the right is a miss, lets confirm that we can attack the left side
+						attackHorizontally = (startingPoint.second == 0) ? false : true; // If the starting point is in the first column, we can't go any further to the left
+					}
 				}
 				else
 				{
@@ -550,4 +589,385 @@ void BattleshipAI::loadPlayerAttackData()
 	{
 		Console::Write("An Exception occurred: " + e->ToString());
 	}
+}
+
+void BattleshipAI::smartAttack()
+{
+	
+	if (slotList == NULL)
+	{
+		// Let's get a list of slots in order of most hits to least hits
+		auto p = getSlotlist();
+		slotList = new vector<pair<int, int>>(); // Create a new vector to hold integer pairs
+		for (auto it = p.begin(); it != p.end(); it++) // Iterate through the list p and add it to the slotList property
+			slotList->push_back(*it);
+	}
+
+	// Perform an attack using the first slot in the list
+	Monitor::Enter(gm); // Request a lock
+
+	// Let's convert it into a String before passing it on to GameMaster
+	String^ s = "" + (Char)('A' + slotList->front().first) + (Char)('1' + slotList->front().second);
+	if (slotList->front().second == 9)
+		s = s[0] + "10";
+	
+	gm->setAttack(false, s); // Pass the attack to GameMaster
+
+	Monitor::Exit(gm); // Release the lock
+
+	// This thread should sleep until the attacks have been processed
+	while (gm->attackInProgress(false) && keepThreadAlive)
+	{
+		Thread::Sleep(100);
+	}
+
+	Monitor::Enter(gm); // request lock
+	if (gm->getAttackResult(false) && keepThreadAlive)
+	{
+		// Since the attack was a hit, the AI needs to attack adjacent slots until the ship has been destroyed
+		auto startingPoint = slotList->front(); // save the starting point
+		auto slotToAttack = slotList->front();
+		slotList->erase(slotList->begin()); // Let's remove the slot at the beginning of the list
+
+		bool attackHorizontally = true;
+		bool attackRightSide = true;
+		bool attackAbove = true;
+		bool keepLooping = !gm->isShipSinking(startingPoint);
+
+		Monitor::Exit(gm); // Release lock
+		while (keepLooping && keepThreadAlive)
+		{
+			// Let's start attacking slots that are horizontally adjacent to the starting point; Start by attacking to the right
+			if (attackHorizontally)
+			{
+				// check if we can move to the right
+				if (slotToAttack.second < 9 && attackRightSide)
+				{
+					slotToAttack.second += 1; // Move one column to the right
+				}
+				else
+				{
+					// Move in the opposite direction from the starting point
+					if (slotToAttack.second > startingPoint.second)
+					{
+						slotToAttack.second = startingPoint.second; // So we don't attack the startingPoint again
+					}
+					slotToAttack.second -= 1; // Move one column to the left
+					attackRightSide = false;
+				}
+			}
+			else
+			{
+				// Time to attack slots that are vertically adjacent to the startingPoint
+				if (slotToAttack.second != startingPoint.second)
+					slotToAttack.second = startingPoint.second; // Make sure that we are attacking slots in the right column
+
+				if (attackAbove && slotToAttack.first > 0)
+				{
+					slotToAttack.first -= 1; // Move up a row
+				}
+				else
+				{
+					if (attackAbove)
+					{
+						attackAbove = false;
+					}
+					if (slotToAttack.first < startingPoint.first)
+					{
+						slotToAttack.first = startingPoint.first; // Making sure that we don't end up attacking the starting point multiple times
+					}
+					if (slotToAttack.first < 9)
+					{
+						slotToAttack.first += 1; // Move down a row
+					}
+				}
+			}
+
+			Monitor::Enter(gm); // Request a lock before informing the GameMaster what slot to attack for the AI
+
+			s = "" + (Char)('A' + slotToAttack.first) + (Char)('1' + slotToAttack.second);
+			if (slotToAttack.second == 9)
+				s = s[0] + "10";
+			gm->setAttack(false, s);
+
+			Monitor::Exit(gm); // Release the lock
+
+			//Thread::Sleep(1500); // Give the GameMaster enough time to process the attack before checking the result
+			while (gm->attackInProgress(false) && keepThreadAlive)
+			{
+				Thread::Sleep(100);
+			}
+			Monitor::Enter(gm); // Request a lock so the AI can check the result
+
+			if (attackHorizontally)
+			{
+				if (attackRightSide)
+				{
+					attackRightSide = gm->getAttackResult(false);
+					if (!attackRightSide)
+					{
+						// Since the current attack on the right is a miss, lets confirm that we can attack the left side
+						attackHorizontally = (startingPoint.second == 0) ? false : true; // If the starting point is in the first column, we can't go any further to the left
+					}
+				}
+				else
+				{
+					attackHorizontally = gm->getAttackResult(false);
+				}
+
+			}
+			else
+			{
+				if (attackAbove)
+					attackAbove = gm->getAttackResult(false);
+			}
+
+			// Update the looping condition before the lock is released
+			keepLooping = !gm->isShipSinking(startingPoint);
+
+			// Find the attacked slot in slotList so we can remove it
+			for (auto it = slotList->begin(); it != slotList->end(); it++)
+			{
+				if (*it == slotToAttack)
+				{
+					// Found the slot in the list, so let's remove it
+					slotList->erase(it);
+					break; // Time to break out of the for loop
+				}
+			}
+
+			Monitor::Exit(gm); // Release the lock
+		}
+		Thread::Sleep(50);
+	}
+	else
+	{
+		Monitor::Exit(gm); // release lock
+		slotList->erase(slotList->begin()); // Let's remove the slot at the beginning of the list
+	}
+}
+
+void BattleshipAI::smartGridSetup()
+{
+	// Vector to store the possible locations to place the selected ship along with it's overall chance of being attacked
+	vector<pair<vector<pair<int, int>>, float>> locations = vector<pair<vector<pair<int, int>>, float>>();
+	vector<int> shipTypes = { 1, 2, 3, 4, 5 }; // Ship types that need to be placed still
+
+	srand(time(NULL)); // Seed the rand with the current time
+
+	while (shipTypes.size() != 0)
+	{
+		int randomSelection = rand() % shipTypes.size();
+		int shipType = shipTypes[randomSelection]; // randomly select a shipType to place
+		int shipSize = 5;
+		if (shipType == 2)
+		{
+			shipSize = 4;
+		}
+		else if (shipType == 3 || shipType == 4)
+		{
+			shipSize = 3;
+		}
+		else if (shipType == 5)
+		{
+			shipSize = 2;
+		}
+
+		for (int i = 1; i < 5; i++)
+		{
+			auto slot = getSlotInQuadrant(i); // ATTENTION: Need to prevent an already picked slot from being returned
+			int maxShift = shipSize / 2;
+			int leftShift = maxShift + ((slot.second - maxShift < 0) ? (slot.second - maxShift) : 0); // how many slots the slot can be shifted to the left
+			int rightShift = maxShift - ((slot.second + maxShift > 9) ? ((slot.second + maxShift) - 9) : 0); // how many slots the slot can be shift to the right
+			int shiftUp = maxShift + ((slot.first - maxShift < 0) ? (slot.first - maxShift) : 0);
+			int shiftDown = maxShift - ((slot.first + maxShift > 9) ? ((slot.first + maxShift) - 9) : 0);
+
+			// Starting horizontal placement
+			auto loc = findSlots(true, shipType, slot);
+			if (!anyOverlaps(loc))
+			{
+				// Add the possible ship placement into the locations vector along with its overall percentage of being attacked
+				locations.push_back(make_pair(loc, getOverallPercentage(loc)));
+			}
+
+			if (slot.second != 0 && slot.second != 9)
+			{
+				// Add the possible ship placements after the slot is shifted to the left in the placement
+				for (int shift = 1; shift <= leftShift; shift++)
+				{
+					if (slot.second + shift <= 9)
+					{
+						loc = findSlots(true, shipType, make_pair(slot.first, slot.second + shift));
+						if (!anyOverlaps(loc) && slotWithinPlacement(loc, slot))
+						{
+							locations.push_back(make_pair(loc, getOverallPercentage(loc)));
+						}
+					}
+				}
+				// Add the possible ship placements after the slot is shifted to the right in the placement
+				for (int shift = rightShift; shift != 0; shift--)
+				{
+					if (slot.second - shift >= 0)
+					{
+						loc = findSlots(true, shipType, make_pair(slot.first, slot.second - shift));
+						if (!anyOverlaps(loc) && slotWithinPlacement(loc, slot))
+						{
+							locations.push_back(make_pair(loc, getOverallPercentage(loc)));
+						}
+					}
+				}
+			}
+
+			// Starting vertical placement
+			loc = findSlots(false, shipType, slot);
+			if (!anyOverlaps(loc))
+			{
+				// Add the possible ship placement into the locations vector along with its overall percentage of being attacked
+				locations.push_back(make_pair(loc, getOverallPercentage(loc)));
+			}
+
+			if (slot.second != 0 && slot.second != 9)
+			{
+				// Add the possible ship placements after the slot is shifted up in the placement
+				for (int shift = 1; shift <= shiftUp; shift++)
+				{
+					if (slot.first + shift <= 9)
+					{
+						loc = findSlots(false, shipType, make_pair(slot.first + shift, slot.second));
+						if (!anyOverlaps(loc) && slotWithinPlacement(loc, slot))
+						{
+							locations.push_back(make_pair(loc, getOverallPercentage(loc)));
+						}
+					}
+				}
+				// Add the possible ship placements after the slot is shifted down in the placement
+				for (int shift = shiftDown; shift != 0; shift--)
+				{
+					if (slot.first - shift >= 0)
+					{
+						loc = findSlots(false, shipType, make_pair(slot.first - shift, slot.second));
+						if (!anyOverlaps(loc) && slotWithinPlacement(loc, slot))
+						{
+							locations.push_back(make_pair(loc, getOverallPercentage(loc)));
+						}
+					}
+				}
+			}
+		}
+
+		// Now that all possible ship placements in all 4 quadrants have been found
+		// let's find the placement has the lowest chance of being attacked by iterating through the locations vector
+		vector<pair<int, int>> bestPlacementSoFar = locations.begin()->first; // Starting with the first placement
+		float currentPercentage = locations.begin()->second;
+
+		// Iterate through the locations vector to find the best placement for the selected ship
+		for (auto placement : locations)
+		{
+			if (placement.second < currentPercentage)
+			{
+				currentPercentage = placement.second;
+				bestPlacementSoFar = placement.first;
+			}
+		}
+
+		// Place the ship on the grid
+		gm->updateShip(false, shipType, bestPlacementSoFar); // Update GameMaster's copy of AI's grid
+		grid->setShip(shipType, bestPlacementSoFar); // Place the ship on AI's grid
+
+		// Remove the selected shipType from the types vector
+		shipTypes.erase(shipTypes.begin() + randomSelection);
+		locations.clear(); // Empty the locations vector for the next iteration of the while loop
+		Thread::Sleep(500); // Give some time for time to change
+	}
+
+}
+
+vector<pair<int, int>> BattleshipAI::getSlotlist()
+{
+	vector<pair<pair<int, int>, float>> v;
+
+	int r = 0, c = 0;
+	for (auto it = pAttackData->begin(); it != pAttackData->end(); it++, r++)
+	{
+		c = 0;
+		for (auto i = it->begin(); i != it->end(); i++, c++)
+		{
+			auto pair = make_pair(make_pair(r, c), (i->first / (float)i->second));
+			v.push_back(pair);
+		}
+	}
+
+	// let's sort the vector by the float value in descending order
+	sort(v.begin(), v.end(), descendingOrder());
+
+	// Now that the slots have been order in descending order we can add the pairs of integers to a vector that will be returned to the caller
+	vector<pair<int, int>> slots; // vector of integer pairs representing a slot's location on the grid
+	for (auto it = v.begin(); it != v.end(); it++)
+	{
+		slots.push_back(it->first);
+	}
+
+	return slots;
+}
+
+// This helper function will search within the given quadrant in pAttackData to find the slot with the least chance of being attacked by the player.
+pair<int, int> BattleshipAI::getSlotInQuadrant(int Quadrant)
+{
+	int startingRow = 0, startingColumn = 0; // Search within the first quadrant
+	if (Quadrant == 2) // Need to search within the second quadrant
+	{
+		startingColumn = 5;
+	}
+	else if (Quadrant == 3) // Need to search within the third quadrant
+	{
+		startingRow = 5;
+	}
+	else if (Quadrant == 4) // Need to search within the fourth quadrant
+	{
+		startingRow = startingColumn = 5; 
+	}
+
+	pair<int, int> slot(startingRow, startingColumn); // The first slot in the given quadrant
+	float currentChance = pAttackData->at(startingRow).at(startingColumn).first / (float)pAttackData->at(startingRow).at(startingColumn).second; // current slot's attacked chance
+
+	// Time to iterate through the quadrant to find the first occurrence slot with the least chance of being attacked
+	for (int r = 1; r < 5; r++)
+	{
+		for (int c = 1; c < 5; c++)
+		{
+			// Calculate the current slot's chance of being attacked
+			float tempChance = pAttackData->at(r).at(c).first / (float)pAttackData->at(r).at(c).second;
+			if (tempChance < currentChance && !grid->slotOccupied(make_pair(r, c))) // compare the two percentages
+			{
+				// Since this slot has a lower chance than the previous selected slot, lets change the selection to it
+				currentChance = tempChance;
+				slot.first = r;
+				slot.second = c;
+			}
+		}
+	}
+
+	return slot; // Return the slot with the lowest chance of being attacked in the given quadrant
+}
+
+float BattleshipAI::getOverallPercentage(vector<pair<int, int>> possiblePlacement)
+{
+	float total = 0.0f;
+	for (auto slot : possiblePlacement)
+	{
+		total += pAttackData->at(slot.first).at(slot.second).first / (float)pAttackData->at(slot.first).at(slot.second).second;
+	}
+	return total / possiblePlacement.size();
+}
+
+bool BattleshipAI::slotWithinPlacement(vector<pair<int, int>> placement, pair<int, int> slot)
+{
+	for (auto pair : placement)
+	{
+		if (pair == slot)
+		{
+			return true;
+		}
+	}
+	return false;
 }
